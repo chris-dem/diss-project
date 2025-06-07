@@ -1,11 +1,7 @@
 use bevy::prelude::*;
 
-#[derive(Resource, Default, Debug)]
-pub struct AppState {
-    pub mode: GateMode,
-}
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, Hash, PartialEq, Eq, States)]
 pub enum GateMode {
     #[default]
     Value,
@@ -19,8 +15,4 @@ impl GateMode {
             Self::Gate => Self::Value,
         }
     }
-}
-
-pub fn toggle_state(mut state: ResMut<AppState>) {
-    state.mode = state.mode.toggle();
 }

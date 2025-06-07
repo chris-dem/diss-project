@@ -1,7 +1,5 @@
-use crate::{
-    app_state::{AppState, GateMode, toggle_state},
-    constants::*,
-};
+use crate::constants::*;
+use crate::state_management::node_addition_state::GateMode;
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 use bevy_egui::{EguiContextPass, EguiContexts, EguiPlugin};
 use egui::Color32;
@@ -12,43 +10,27 @@ pub struct UiPlugin;
 struct MainPassCube;
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<AppState>()
-            .add_systems(Startup, ui_setup)
-            .add_plugins(EguiPlugin {
-                enable_multipass_for_primary_context: true,
-            })
-            .add_systems(
-                EguiContextPass,
-                toggle_state.run_if(input_just_pressed(KeyCode::KeyM)),
-            )
-            .add_systems(EguiContextPass, render_ui_window);
+        app.add_plugins(EguiPlugin {
+            enable_multipass_for_primary_context: true,
+        })
+        .add_systems(
+            EguiContextPass,
+            cycle_add_state.run_if(input_just_pressed(KeyCode::KeyM)),
+        )
+        .add_systems(EguiContextPass, render_ui_window);
     }
 }
 
-fn ui_setup(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+fn cycle_add_state(
+    current_state: Res<State<GateMode>>,
+    mut next_state: ResMut<NextState<GateMode>>,
 ) {
-    let default_material = ColorMaterial::from_color(VCOLOUR);
-    let cube_handle = meshes.add(Rectangle::new(D_RADIUS, D_RADIUS));
-    let main_material_handle = materials.add(default_material);
-
-    // Main pass cube.
-    commands
-        .spawn((
-            Mesh2d(cube_handle),
-            MeshMaterial2d(main_material_handle),
-            Transform::default(),
-        ))
-        .insert(MainPassCube);
-
-    commands.spawn((Camera2d, Transform::default()));
+    next_state.set(current_state.toggle());
 }
 
-fn render_ui_window(ui_state: Res<AppState>, mut contexts: EguiContexts) -> Result {
+fn render_ui_window(ui_state: Res<State<GateMode>>, mut contexts: EguiContexts) -> Result {
     let ctx = contexts.ctx_mut();
-    let (col, text) = match ui_state.mode {
+    let (col, text) = match **ui_state {
         GateMode::Gate => (GCOLOUR, GATETEXT),
         GateMode::Value => (VCOLOUR, VALTEXT),
     };
