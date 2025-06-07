@@ -3,7 +3,7 @@ use crate::{
     constants::*,
 };
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
-use bevy_egui::{input::egui_wants_any_keyboard_input, EguiContextPass, EguiContexts, EguiPlugin};
+use bevy_egui::{EguiContextPass, EguiContexts, EguiPlugin};
 use egui::Color32;
 
 pub struct UiPlugin;
