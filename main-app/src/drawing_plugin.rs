@@ -3,11 +3,13 @@ use bevy::{
     picking::prelude::*, prelude::*,
 };
 
+use bevy_prototype_lyon::prelude::*;
+
 use crate::{
-    constants::D_RADIUS,
+    constants::{D_RADIUS, VCOLOUR},
     state_management::{
         mouse_state::{MousePositions, MouseState},
-        node_addition_state::{GateCircle, GateMode, Interactable, ValueCircle},
+        node_addition_state::{GateCircle, GateMode, ValueCircle},
     },
 };
 
@@ -63,20 +65,15 @@ fn click_draw(
     };
     let col_handle = material.add(gate_mode.get_col());
     let circle_handle = meshes.add(Circle::new(D_RADIUS));
-    let mut entitity = match **gate_mode {
+
+    let mut entity = match **gate_mode {
         GateMode::Value => commands.spawn((
-            Mesh2d(circle_handle),
-            MeshMaterial2d(col_handle),
-            Transform {
-                translation: pos.extend(0.),
-                ..Transform::default()
-            },
-            Outline {
-                width: Val::Px(0.5),
-                offset: Val::Px(0.5),
-                color: Color::from(YELLOW),
-            },
-            ValueCircle,
+            ShapeBuilder::with(&shapes::Circle {
+                center: pos,
+                radius: D_RADIUS,
+            })
+            .fill(VCOLOUR)
+            .build(),
             Pickable::default(),
         )),
         GateMode::Gate => commands.spawn((
@@ -95,8 +92,10 @@ fn click_draw(
             Pickable::default(),
         )),
     };
-
-    entitity.observe(on_drag);
+    entity
+        .observe(on_drag)
+        .observe(on_hover_enter)
+        .observe(on_hover_exit);
 }
 
 fn on_drag(trigger: Trigger<Pointer<Drag>>, mut query: Query<&mut Transform, With<Pickable>>) {
@@ -105,26 +104,17 @@ fn on_drag(trigger: Trigger<Pointer<Drag>>, mut query: Query<&mut Transform, Wit
         pos.translation.y -= trigger.delta.y;
     }
 }
-//
-// fn on_hover_enter(
-//     trigger: Trigger<Pointer<Drag>>,
-//     mut meshes: ResMut<Assets<Mesh>>,
-//     mut material: ResMut<Assets<ColorMaterial>>,
-//     mut commands: Commands,
-//     mut query: Query<&mut Transform, With<Pickable>>,
-// ) {
-//     let Ok(current_pos) = query.get_mut(trigger.target) else {
-//         return;
-//     };
-//
-//     let circle = Outline
-//
-//     commands.spawn()
-// }
-//
-// fn on_hover_eit(trigger: Trigger<Pointer<Drag>>, mut query: Query<&mut Transform, With<Pickable>>) {
-//     if let Ok(ref mut pos) = query.get_mut(trigger.target()) {
-//         pos.translation.x += trigger.delta.x;
-//         pos.translation.y -= trigger.delta.y;
-//     }
-// }
+
+fn on_hover_enter(trigger: Trigger<Pointer<Over>>, mut query: Query<&mut Shape, With<Pickable>>) {
+    let Ok(ref mut pos) = query.get_mut(trigger.target) else {
+        return;
+    };
+    pos.stroke = Some(Stroke::new(Color::from(YELLOW), 5.))
+}
+
+fn on_hover_exit(trigger: Trigger<Pointer<Out>>, mut query: Query<&mut Shape, With<Pickable>>) {
+    let Ok(ref mut pos) = query.get_mut(trigger.target) else {
+        return;
+    };
+    pos.stroke = None;
+}

@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bevy = { version = "0.16.1", features = ["bevy_state"] }
+bevy = { version = "0.16.1", features = ["bevy_state", "bevy_picking"] }
+bevy-inspector-egui = "0.31.0"
 bevy_egui = "0.34.1"
+# bevy_vector_shapes = "0.10.0"
 egui = "0.31.1"
 wgpu-types = "24.0.0"
+bevy_prototype_lyon = { git = "https://github.com/rparrett/bevy_prototype_lyon", branch = "fix-dynamic-examples" }
+

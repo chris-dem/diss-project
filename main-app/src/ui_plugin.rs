@@ -1,7 +1,8 @@
+use crate::state_management::mouse_state::MouseState;
 use crate::state_management::node_addition_state::GateMode;
-use crate::{constants::*, state_management::mouse_state::MouseState};
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 use bevy_egui::{EguiContextPass, EguiContexts, EguiPlugin};
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use egui::Color32;
 
 pub struct UiPlugin;
@@ -11,6 +12,7 @@ impl Plugin for UiPlugin {
         app.add_plugins(EguiPlugin {
             enable_multipass_for_primary_context: true,
         })
+        .add_plugins(WorldInspectorPlugin::new())
         .add_systems(
             EguiContextPass,
             cycle_add_state.run_if(input_just_pressed(KeyCode::KeyM)),
