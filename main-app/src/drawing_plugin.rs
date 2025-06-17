@@ -6,7 +6,7 @@ use bevy::{
 use bevy_prototype_lyon::prelude::*;
 
 use crate::{
-    constants::{D_RADIUS, VCOLOUR},
+    constants::{D_RADIUS, GCOLOUR, VCOLOUR},
     state_management::{
         mouse_state::{MousePositions, MouseState},
         node_addition_state::{GateCircle, GateMode, ValueCircle},
@@ -56,15 +56,11 @@ fn draw_setup() {}
 fn click_draw(
     mouse_resource: Res<MousePositions>,
     gate_mode: Res<State<GateMode>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut material: ResMut<Assets<ColorMaterial>>,
     mut commands: Commands,
 ) {
     let Some(pos) = mouse_resource.0 else {
         return;
     };
-    let col_handle = material.add(gate_mode.get_col());
-    let circle_handle = meshes.add(Circle::new(D_RADIUS));
 
     let mut entity = match **gate_mode {
         GateMode::Value => commands.spawn((
@@ -74,21 +70,17 @@ fn click_draw(
             })
             .fill(VCOLOUR)
             .build(),
+            ValueCircle,
             Pickable::default(),
         )),
         GateMode::Gate => commands.spawn((
-            Mesh2d(circle_handle),
-            MeshMaterial2d(col_handle),
-            Transform {
-                translation: pos.extend(0.),
-                ..Transform::default()
-            },
+            ShapeBuilder::with(&shapes::Circle {
+                center: pos,
+                radius: D_RADIUS,
+            })
+            .fill(GCOLOUR)
+            .build(),
             GateCircle,
-            Outline {
-                width: Val::Px(10.),
-                offset: Val::Px(0.5),
-                color: Color::from(YELLOW),
-            },
             Pickable::default(),
         )),
     };
