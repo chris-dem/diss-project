@@ -1,9 +1,11 @@
 use bevy::prelude::*;
 
-mod state_management;
+mod camera_plugin;
 mod constants;
-mod ui_plugin;
 mod drawing_plugin;
+mod misc;
+mod state_management;
+mod ui_plugin;
 
 fn main() {
     App::new()
@@ -11,5 +13,6 @@ fn main() {
         .add_plugins(ui_plugin::UiPlugin)
         .add_plugins(state_management::state_init::StateManagementPlugin)
         .add_plugins(drawing_plugin::DrawingPlugin)
+        .add_plugins(camera_plugin::CameraPlugin)
         .run();
 }
