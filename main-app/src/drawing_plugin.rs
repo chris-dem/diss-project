@@ -9,7 +9,7 @@ use crate::{
     constants::{D_RADIUS, GCOLOUR, VCOLOUR},
     state_management::{
         mouse_state::{MousePositions, MouseState},
-        node_addition_state::{GateCircle, GateMode, GraphNode, ValueCircle},
+        node_addition_state::{GateMode, GraphNode},
     },
 };
 
@@ -59,38 +59,20 @@ fn click_draw(
         return;
     };
 
-    let mut entity = match **gate_mode {
-        GateMode::Value => commands.spawn((
-            ShapeBuilder::with(&shapes::Circle {
-                center: Vec2::splat(0.),
-                radius: D_RADIUS,
-            })
-            .fill(VCOLOUR)
-            .build(),
-            ValueCircle,
-            GraphNode,
-            Pickable::default(),
-            Transform {
-                translation: pos.extend(0.),
-                ..default()
-            },
-        )),
-        GateMode::Gate => commands.spawn((
-            ShapeBuilder::with(&shapes::Circle {
-                center: Vec2::splat(0.),
-                radius: D_RADIUS,
-            })
-            .fill(GCOLOUR)
-            .build(),
-            GateCircle,
-            GraphNode,
-            Pickable::default(),
-            Transform {
-                translation: pos.extend(0.),
-                ..default()
-            },
-        )),
-    };
+    let mut entity = commands.spawn((
+        ShapeBuilder::with(&shapes::Circle {
+            center: Vec2::splat(0.),
+            radius: D_RADIUS,
+        })
+        .fill(gate_mode.get_col())
+        .build(),
+        GraphNode(**gate_mode),
+        Pickable::default(),
+        Transform {
+            translation: pos.extend(0.),
+            ..default()
+        },
+    ));
 
     entity
         .observe(on_drag)

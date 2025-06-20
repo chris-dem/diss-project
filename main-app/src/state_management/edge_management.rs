@@ -1,8 +1,15 @@
-use bevy::{color::palettes::css::RED, prelude::*};
+use bevy::{
+    color::palettes::css::{ORANGE, RED},
+    input::common_conditions::input_just_pressed,
+    prelude::*,
+};
 
 use crate::constants::D_RADIUS;
 
-use super::{mouse_state::MouseState, node_addition_state::GraphNode};
+use super::{
+    mouse_state::MouseState,
+    node_addition_state::{GateMode, GraphNode},
+};
 
 pub struct EdgeManagementPlugin;
 
@@ -29,6 +36,9 @@ pub struct PathBuilderResource(Option<Entity>);
 #[derive(Default, Resource)]
 pub struct ObserverResource(Option<Entity>);
 
+#[derive(Default, Resource, Clone, Copy, PartialEq, Eq)]
+pub struct SelectedNodeMode(Option<GateMode>);
+
 type EdgePair = (Entity, Entity);
 
 #[derive(Default, Resource)]
@@ -39,12 +49,44 @@ impl Plugin for EdgeManagementPlugin {
         app.init_resource::<PathBuilderResource>()
             .init_resource::<ObserverResource>()
             .init_resource::<EdgeListResource>()
+            .init_resource::<SelectedNodeMode>()
             .add_sub_state::<EdgeState>()
             .add_systems(Startup, setup)
             .add_systems(OnEnter(MouseState::Edge), add_edge_detection)
+            .add_systems(
+                Update,
+                reset_edge_mode
+                    .run_if(in_state(EdgeState::SelectedNode))
+                    .run_if(input_just_pressed(KeyCode::Escape)),
+            )
+            .add_systems(
+                Update,
+                highlight_possible_nodes.run_if(in_state(EdgeState::SelectedNode)),
+            )
             .add_systems(OnExit(MouseState::Edge), remove_edge_detection)
             .add_systems(FixedPostUpdate, draw_edges);
     }
+}
+
+fn highlight_possible_nodes(
+    selected_node_mode: Res<SelectedNodeMode>,
+    query: Query<(&Transform, &GraphNode)>,
+    mut gizmos: Gizmos,
+) {
+    let Some(mode) = selected_node_mode.0 else {
+        error!("Expected node to be set");
+        return;
+    };
+
+    for (t, g) in query {
+        if g.0 == mode {
+            gizmos.circle_2d(t.translation.xy(), D_RADIUS + 5., ORANGE);
+        }
+    }
+}
+
+fn reset_edge_mode(mut next_state: ResMut<NextState<EdgeState>>) {
+    next_state.set(EdgeState::DefaultState);
 }
 
 fn setup(mut config_store: ResMut<GizmoConfigStore>) {
@@ -79,14 +121,21 @@ fn add_edge_detection(
 
 fn on_click(
     trigger: Trigger<Pointer<Click>>,
+    query: Query<&GraphNode>,
     mouse_state: Res<State<EdgeState>>,
     mut next_mouse_state: ResMut<NextState<EdgeState>>,
     mut path_builder: ResMut<PathBuilderResource>,
+    mut selected_node: ResMut<SelectedNodeMode>,
     mut edge_list: ResMut<EdgeListResource>,
 ) {
+    let Ok(graph_node) = query.get(trigger.target()) else {
+        error!("Query does not contain a graph node");
+        return;
+    };
     match **mouse_state {
         EdgeState::DefaultState => {
             path_builder.0 = Some(trigger.target());
+            selected_node.0 = Some(graph_node.0.toggle());
             next_mouse_state.set(mouse_state.toggle_state());
         }
         EdgeState::SelectedNode => {
