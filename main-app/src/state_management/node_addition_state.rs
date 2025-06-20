@@ -14,6 +14,9 @@ pub enum GateMode {
 #[derive(Debug, Clone, Copy, Default, Hash, PartialEq, Eq, Component)]
 pub struct Interactable;
 
+#[derive(Debug, Clone, Copy, Default, Hash, PartialEq, Eq, Component)]
+pub struct GraphNode;
+
 impl Display for GateMode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {

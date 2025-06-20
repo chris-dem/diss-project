@@ -9,7 +9,7 @@ use crate::{
     constants::{D_RADIUS, GCOLOUR, VCOLOUR},
     state_management::{
         mouse_state::{MousePositions, MouseState},
-        node_addition_state::{GateCircle, GateMode, ValueCircle},
+        node_addition_state::{GateCircle, GateMode, GraphNode, ValueCircle},
     },
 };
 
@@ -20,19 +20,18 @@ pub struct MouseCircle;
 
 impl Plugin for DrawingPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(MouseState::Node), draw_setup)
-            .add_systems(
-                PostUpdate,
-                hover_draw
-                    .run_if(in_state(MouseState::Node))
-                    .after(TransformSystem::TransformPropagate),
-            )
-            .add_systems(
-                Update,
-                click_draw
-                    .run_if(in_state(MouseState::Node))
-                    .run_if(input_just_pressed(KeyCode::Enter)),
-            );
+        app.add_systems(
+            PostUpdate,
+            hover_draw
+                .run_if(in_state(MouseState::Node))
+                .after(TransformSystem::TransformPropagate),
+        )
+        .add_systems(
+            Update,
+            click_draw
+                .run_if(in_state(MouseState::Node))
+                .run_if(input_just_pressed(KeyCode::Enter)),
+        );
     }
 }
 
@@ -51,8 +50,6 @@ fn hover_draw(
     gizmos.circle_2d(world_pos, D_RADIUS, col);
 }
 
-fn draw_setup() {}
-
 fn click_draw(
     mouse_resource: Res<MousePositions>,
     gate_mode: Res<State<GateMode>>,
@@ -65,25 +62,36 @@ fn click_draw(
     let mut entity = match **gate_mode {
         GateMode::Value => commands.spawn((
             ShapeBuilder::with(&shapes::Circle {
-                center: pos,
+                center: Vec2::splat(0.),
                 radius: D_RADIUS,
             })
             .fill(VCOLOUR)
             .build(),
             ValueCircle,
+            GraphNode,
             Pickable::default(),
+            Transform {
+                translation: pos.extend(0.),
+                ..default()
+            },
         )),
         GateMode::Gate => commands.spawn((
             ShapeBuilder::with(&shapes::Circle {
-                center: pos,
+                center: Vec2::splat(0.),
                 radius: D_RADIUS,
             })
             .fill(GCOLOUR)
             .build(),
             GateCircle,
+            GraphNode,
             Pickable::default(),
+            Transform {
+                translation: pos.extend(0.),
+                ..default()
+            },
         )),
     };
+
     entity
         .observe(on_drag)
         .observe(on_hover_enter)
