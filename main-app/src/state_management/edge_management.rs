@@ -1,7 +1,4 @@
-use bevy::{
-    color::palettes::css::{BLACK, RED, WHITE},
-    prelude::*,
-};
+use bevy::{color::palettes::css::RED, prelude::*};
 
 use crate::constants::D_RADIUS;
 
