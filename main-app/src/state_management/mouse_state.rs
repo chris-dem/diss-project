@@ -9,8 +9,6 @@ pub enum MouseState {
     Node,
     // Add edges
     Edge,
-    // Navigate the map
-    Hover,
 }
 
 impl Display for MouseState {
@@ -18,7 +16,6 @@ impl Display for MouseState {
         match self {
             Self::Node => write!(f, "Node Mode"),
             Self::Edge => write!(f, "Edge Mode"),
-            Self::Hover => write!(f, "Hover Mode"),
         }
     }
 }
@@ -30,8 +27,7 @@ impl MouseState {
     pub fn cycle_states(&self) -> Self {
         match self {
             Self::Node => Self::Edge,
-            Self::Edge => Self::Hover,
-            Self::Hover => Self::Node,
+            Self::Edge => Self::Node,
         }
     }
 }

@@ -24,7 +24,7 @@ impl Plugin for CameraPlugin {
             .add_systems(
                 Update,
                 move_camera
-                    .run_if(in_state(MouseState::Hover))
+                    .run_if(input_pressed(KeyCode::ControlLeft))
                     .run_if(input_pressed(MouseButton::Left)),
             );
     }

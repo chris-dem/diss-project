@@ -139,12 +139,21 @@ fn on_click(
             next_mouse_state.set(mouse_state.toggle_state());
         }
         EdgeState::SelectedNode => {
+            let Some(sel_gate_mode) = selected_node.0 else {
+                error!("No selected node found");
+                return;
+            };
+            if graph_node.0 != sel_gate_mode {
+                info!("Selected opposite node");
+                return;
+            }
             let Some(source) = path_builder.0 else {
                 error!("Invalid configuration");
                 next_mouse_state.set(mouse_state.toggle_state());
                 return;
             };
             edge_list.0.push((source, trigger.target()));
+            selected_node.0 = None;
             path_builder.0 = None;
             next_mouse_state.set(mouse_state.toggle_state());
         }

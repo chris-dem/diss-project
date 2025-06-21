@@ -15,7 +15,7 @@ impl Plugin for UiPlugin {
         .add_plugins(WorldInspectorPlugin::new())
         .add_systems(
             EguiContextPass,
-            cycle_add_state.run_if(input_just_pressed(KeyCode::KeyM)),
+            cycle_add_state.run_if(input_just_pressed(KeyCode::KeyG)),
         )
         .add_systems(EguiContextPass, render_ui_window);
     }

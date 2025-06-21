@@ -1,12 +1,17 @@
 use bevy::{
-    color::palettes::css::YELLOW, input::common_conditions::input_just_pressed,
-    picking::prelude::*, prelude::*,
+    color::palettes::css::YELLOW,
+    input::{
+        common_conditions::{input_just_pressed, input_pressed},
+        keyboard,
+    },
+    picking::prelude::*,
+    prelude::*,
 };
 
 use bevy_prototype_lyon::prelude::*;
 
 use crate::{
-    constants::{D_RADIUS, GCOLOUR, VCOLOUR},
+    constants::D_RADIUS,
     state_management::{
         mouse_state::{MousePositions, MouseState},
         node_addition_state::{GateMode, GraphNode},
@@ -24,13 +29,15 @@ impl Plugin for DrawingPlugin {
             PostUpdate,
             hover_draw
                 .run_if(in_state(MouseState::Node))
+                .run_if(input_pressed(KeyCode::KeyA))
                 .after(TransformSystem::TransformPropagate),
         )
         .add_systems(
             Update,
             click_draw
                 .run_if(in_state(MouseState::Node))
-                .run_if(input_just_pressed(KeyCode::Enter)),
+                .run_if(input_pressed(KeyCode::KeyA))
+                .run_if(input_just_pressed(MouseButton::Left)),
         );
     }
 }
@@ -80,7 +87,15 @@ fn click_draw(
         .observe(on_hover_exit);
 }
 
-fn on_drag(trigger: Trigger<Pointer<Drag>>, mut query: Query<&mut Transform, With<Pickable>>) {
+fn on_drag(
+    trigger: Trigger<Pointer<Drag>>,
+    mut query: Query<&mut Transform, With<Pickable>>,
+    key: Res<ButtonInput<KeyCode>>,
+) {
+    if !key.pressed(KeyCode::KeyM) {
+        return;
+    }
+
     if let Ok(ref mut pos) = query.get_mut(trigger.target()) {
         pos.translation.x += trigger.delta.x;
         pos.translation.y -= trigger.delta.y;
