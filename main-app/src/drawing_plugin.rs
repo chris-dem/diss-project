@@ -1,9 +1,6 @@
 use bevy::{
     color::palettes::css::YELLOW,
-    input::{
-        common_conditions::{input_just_pressed, input_pressed},
-        keyboard,
-    },
+    input::common_conditions::{input_just_pressed, input_pressed},
     picking::prelude::*,
     prelude::*,
 };
