@@ -6,8 +6,6 @@ use bevy::{
     prelude::*,
 };
 
-use crate::state_management::mouse_state::MouseState;
-
 pub struct CameraPlugin;
 
 #[derive(Component, Debug, Clone, Copy)]

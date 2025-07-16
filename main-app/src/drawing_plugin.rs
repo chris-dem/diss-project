@@ -5,8 +5,7 @@ use bevy::{
     prelude::*,
 };
 use bevy_prototype_lyon::prelude::*;
-use itertools::Itertools;
-use std::{ops::RangeFull, path::PathBuf, time::UNIX_EPOCH};
+use std::time::UNIX_EPOCH;
 
 use crate::{
     assets::{ASSET_DICT, generate_bundle_from_asset},
@@ -16,18 +15,7 @@ use crate::{
         node_addition_state::{GateMode, GraphNode},
     },
 };
-
-static DIR: &'static str = "assets";
-static BOT: &'static str = "bot_value.svg";
-static ZERO: &'static str = "bot_value.svg";
-static ONE: &'static str = "bot_value.svg";
-
 pub struct DrawingPlugin;
-
-fn get_relative_path(img: &str) -> PathBuf {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    path.join(DIR).join(img)
-}
 
 #[derive(Component, Debug, Clone, Copy)]
 pub struct MouseCircle;

@@ -1,8 +1,9 @@
 use bevy::prelude::*;
+use pure_circuit_lib::EnumCycle;
 use std::{fmt::Display, hash::Hash};
 
 // Current State of the mouse
-#[derive(Debug, Clone, Copy, Default, States, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Default, States, PartialEq, Eq, Hash, EnumCycle)]
 pub enum MouseState {
     // Add nodes
     #[default]
@@ -22,22 +23,6 @@ impl Display for MouseState {
 
 #[derive(Resource, Clone, Copy, Debug, Default)]
 pub struct MousePositions(pub Option<Vec2>);
-
-impl MouseState {
-    pub fn cycle_states(&self) -> Self {
-        match self {
-            Self::Node => Self::Edge,
-            Self::Edge => Self::Node,
-        }
-    }
-}
-
-pub fn cycle_mouse_state(
-    mouse_state: Res<State<MouseState>>,
-    mut updated_state: ResMut<NextState<MouseState>>,
-) {
-    updated_state.set(mouse_state.cycle_states());
-}
 
 pub fn update_mouse_resource(
     camera_query: Single<(&Camera, &GlobalTransform)>,

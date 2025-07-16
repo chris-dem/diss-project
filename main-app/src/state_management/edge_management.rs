@@ -1,10 +1,10 @@
+use crate::constants::D_RADIUS;
 use bevy::{
     color::palettes::css::{ORANGE, RED},
     input::common_conditions::input_just_pressed,
     prelude::*,
 };
-
-use crate::constants::D_RADIUS;
+use pure_circuit_lib::EnumCycle;
 
 use super::{
     mouse_state::MouseState,

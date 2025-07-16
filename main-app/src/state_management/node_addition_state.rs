@@ -1,9 +1,9 @@
 use crate::constants::{GATETEXT, GCOLOUR, VALTEXT, VCOLOUR};
 use bevy::prelude::*;
-use pure_circuit_lib::gates::Value;
+use pure_circuit_lib::{EnumCycle, gates::Value};
 use std::fmt::Display;
 
-#[derive(Debug, Clone, Copy, Default, Hash, PartialEq, Eq, States)]
+#[derive(Debug, Clone, Copy, Default, Hash, PartialEq, Eq, States, EnumCycle)]
 pub enum GateMode {
     #[default]
     Value,
@@ -48,13 +48,6 @@ impl Display for GateMode {
 }
 
 impl GateMode {
-    pub fn toggle(&self) -> Self {
-        match self {
-            Self::Value => Self::Gate,
-            Self::Gate => Self::Value,
-        }
-    }
-
     pub fn get_col(&self) -> Color {
         match self {
             Self::Value => VCOLOUR,

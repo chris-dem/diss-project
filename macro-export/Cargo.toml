@@ -1,0 +1,18 @@
+[package]
+name = "macro_export"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+proc-macro = true
+crate-type = ["proc-macro"] # Add this line explicitly
+
+[dependencies]
+misc-lib = { path = "../misc-lib" }
+itertools = "0.14.0"
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "2.0", features = ["full"] }
+
+[dev-dependencies]
+trybuild = "1.0.106"

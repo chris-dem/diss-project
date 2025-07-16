@@ -1,8 +1,10 @@
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 
+use crate::misc::cycle_enum_state;
+
 use super::{
     edge_management::EdgeManagementPlugin,
-    mouse_state::{MousePositions, MouseState, cycle_mouse_state, update_mouse_resource},
+    mouse_state::{MousePositions, MouseState, update_mouse_resource},
     node_addition_state::GateMode,
 };
 
@@ -17,7 +19,7 @@ impl Plugin for StateManagementPlugin {
             .add_systems(Update, update_mouse_resource)
             .add_systems(
                 Update,
-                cycle_mouse_state.run_if(input_just_pressed(KeyCode::BracketLeft)),
+                cycle_enum_state::<MouseState>.run_if(input_just_pressed(KeyCode::BracketLeft)),
             );
     }
 }

@@ -1,4 +1,3 @@
 [workspace]
 resolver = "2"
-members = [ "main-app","pure-circuit-lib"]
-
+members = ["main-app", "misc-lib", "macro-export", "pure-circuit-lib"]
