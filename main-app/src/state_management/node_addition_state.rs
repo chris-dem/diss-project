@@ -1,8 +1,7 @@
-use std::fmt::Display;
-
-use bevy::prelude::*;
-
 use crate::constants::{GATETEXT, GCOLOUR, VALTEXT, VCOLOUR};
+use bevy::prelude::*;
+use pure_circuit_lib::gates::Value;
+use std::fmt::Display;
 
 #[derive(Debug, Clone, Copy, Default, Hash, PartialEq, Eq, States)]
 pub enum GateMode {
@@ -10,6 +9,28 @@ pub enum GateMode {
     Value,
     Gate,
 }
+
+#[derive(Debug, Clone, Copy, Default, Hash, PartialEq, Eq, SubStates)]
+#[source(GateMode = GateMode::Value)]
+pub enum ValueState {
+    #[default]
+    Bot,
+    Zero,
+    One,
+}
+
+impl Into<u8> for ValueState {
+    fn into(self) -> u8 {
+        match self {
+            Self::Zero => 0,
+            Self::One => 1,
+            Self::Bot => 2,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, Hash, PartialEq, Eq, Component)]
+pub struct ValueComponent(pub Value);
 
 #[derive(Debug, Clone, Copy, Default, Hash, PartialEq, Eq, Component)]
 pub struct Interactable;

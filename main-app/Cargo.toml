@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+pure-circuit-lib = { path = "../pure-circuit-lib" }
+# 2D and 3D are available on default, if you only want/need one, use the following
+bevy_svg = { version = "0.16.0-rc1" }
 bevy = { version = "0.16.1", features = ["bevy_state", "bevy_picking"] }
 bevy-inspector-egui = "0.31.0"
 bevy_egui = "0.34.1"
@@ -11,4 +14,4 @@ bevy_egui = "0.34.1"
 egui = "0.31.1"
 wgpu-types = "24.0.0"
 bevy_prototype_lyon = { git = "https://github.com/rparrett/bevy_prototype_lyon", branch = "fix-dynamic-examples" }
-
+itertools = "0.14.0"

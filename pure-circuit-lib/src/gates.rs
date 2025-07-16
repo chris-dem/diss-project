@@ -2,8 +2,8 @@ use enum_derived::Rand;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Rand, PartialOrd, Ord, Default, EnumIter)]
-pub(crate) enum Value {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Rand, PartialOrd, Ord, Default, EnumIter, Hash)]
+pub enum Value {
     #[default]
     Bot,
     Zero,
@@ -20,22 +20,22 @@ impl Value {
     }
 }
 
-pub(crate) trait GateCheck {
+pub trait GateCheck {
     fn check(&self, u: Value, v: Value, w: Option<Value>) -> Option<bool>;
 }
 
-pub(crate) trait RestrictedGateCheck {
+pub trait RestrictedGateCheck {
     fn restricted_check(&self, u: Value, v: Value, w: Option<Value>) -> Option<bool>;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Rand)]
-pub(crate) enum UnaryGate {
+pub enum UnaryGate {
     Not,
     Copy,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Rand)]
-pub(crate) enum BinaryGate {
+pub enum BinaryGate {
     And,
     Or,
     Nor,

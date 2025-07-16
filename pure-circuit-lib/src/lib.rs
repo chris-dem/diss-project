@@ -1,6 +1,4 @@
-mod gates;
-
-pub(crate) const MAX_SIZE : usize = 32;
+pub mod gates;
 
 // enum Node {
 //     Gate,

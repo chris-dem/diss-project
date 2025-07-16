@@ -5,6 +5,7 @@ mod camera_plugin;
 mod constants;
 mod drawing_plugin;
 mod misc;
+mod assets;
 mod state_management;
 mod ui_plugin;
 
