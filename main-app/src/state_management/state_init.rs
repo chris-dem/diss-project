@@ -1,6 +1,6 @@
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 
-use crate::misc::cycle_enum_state;
+use crate::{misc::cycle_enum_state, state_management::node_addition_state::ValueState};
 
 use super::{
     edge_management::EdgeManagementPlugin,
@@ -15,6 +15,7 @@ impl Plugin for StateManagementPlugin {
         app.add_plugins(EdgeManagementPlugin)
             .init_state::<MouseState>()
             .init_state::<GateMode>()
+            .init_state::<ValueState>()
             .init_resource::<MousePositions>()
             .add_systems(Update, update_mouse_resource)
             .add_systems(

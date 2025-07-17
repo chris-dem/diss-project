@@ -10,13 +10,18 @@ pub enum GateMode {
     Gate,
 }
 
-#[derive(Debug, Clone, Copy, Default, Hash, PartialEq, Eq, SubStates)]
-#[source(GateMode = GateMode::Value)]
+#[derive(Debug, Clone, Copy, Default, Hash, PartialEq, Eq, States, EnumCycle)]
 pub enum ValueState {
     #[default]
     Bot,
     Zero,
     One,
+}
+
+impl Display for ValueState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?} value", self)
+    }
 }
 
 impl Into<u8> for ValueState {
