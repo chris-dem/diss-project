@@ -1,4 +1,4 @@
-pub trait EnumCycle {
+pub trait EnumCycle:  PartialEq {
     fn toggle(&self) -> Self;
 }
 

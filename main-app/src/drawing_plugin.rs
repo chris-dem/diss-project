@@ -1,18 +1,19 @@
 use bevy::{
     color::palettes::css::YELLOW,
+    ecs::{observer::TriggerTargets, relationship::RelatedSpawnerCommands},
     input::common_conditions::{input_just_pressed, input_pressed},
-    picking::prelude::*,
     prelude::*,
 };
 use bevy_prototype_lyon::prelude::*;
-use std::time::UNIX_EPOCH;
+use pure_circuit_lib::EnumCycle;
+use pure_circuit_lib::gates::{Gate, Value};
 
 use crate::{
     assets::{ASSET_DICT, generate_bundle_from_asset},
     constants::D_RADIUS,
     state_management::{
         mouse_state::{MousePositions, MouseState},
-        node_addition_state::{GateMode, GraphNode},
+        node_addition_state::{GateMode, GraphNode, NodeValue, ValueComponent, ValueState},
     },
 };
 pub struct DrawingPlugin;
@@ -58,11 +59,19 @@ fn hover_draw(
 fn click_draw(
     mouse_resource: Res<MousePositions>,
     gate_mode: Res<State<GateMode>>,
+    value_state: Res<State<ValueState<Value>>>,
+    gate_state: Res<State<ValueState<Gate>>>,
+    asset_server: Res<AssetServer>,
     mut commands: Commands,
 ) {
     let Some(pos) = mouse_resource.0 else {
         return;
     };
+    let val = match **gate_mode {
+        GateMode::Gate => NodeValue::GateNode(gate_state.0),
+        GateMode::Value => NodeValue::ValueNode(value_state.0),
+    };
+
     let mut entity = commands.spawn((
         ShapeBuilder::with(&shapes::Circle {
             center: Vec2::splat(0.),
@@ -71,34 +80,85 @@ fn click_draw(
         .fill(gate_mode.get_col())
         .build(),
         GraphNode(**gate_mode),
+        ValueComponent(val),
         Pickable::default(),
         Transform {
             translation: pos.extend(0.),
             ..default()
         },
     ));
-    entity.with_children(|parent| {
-        let rand_ind: usize = (std::time::SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs()
-            % 3) as usize;
-        for bund in generate_bundle_from_asset(
-            ASSET_DICT[rand_ind].0.as_slice(),
-            ASSET_DICT[rand_ind].1.as_slice(),
-            ASSET_DICT[rand_ind].2,
-        )
-        .iter()
-        .cloned()
-        {
-            parent.spawn(bund);
-        }
-    });
+    entity.with_children(|parent| value_spawner(parent, val, asset_server));
 
     entity
         .observe(on_drag)
         .observe(on_hover_enter)
+        .observe(on_click)
         .observe(on_hover_exit);
+}
+
+fn on_click(
+    trigger: Trigger<Pointer<Click>>,
+    mut query: Query<(&mut Children, Entity, &mut ValueComponent), With<ValueComponent>>,
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+) {
+    let Ok((children, entity, ref mut current_value)) = query.get_mut(trigger.target) else {
+        warn!("Element not found");
+        return;
+    };
+
+    for entity in children.entities() {
+        commands.entity(entity).despawn();
+    }
+
+    current_value.0 = match current_value.0 {
+        NodeValue::GateNode(b) => NodeValue::GateNode(b.toggle()),
+        NodeValue::ValueNode(b) => NodeValue::ValueNode(b.toggle()),
+    };
+
+    commands
+        .entity(entity)
+        .with_children(|parent| value_spawner(parent, current_value.0, asset_server));
+}
+
+fn value_spawner(
+    parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
+    value: NodeValue,
+    asset_server: Res<AssetServer>,
+) {
+    let font = asset_server.load("fonts/FiraSans-Bold.ttf");
+    let text_font = TextFont {
+        font: font.clone(),
+        font_size: 35.,
+        ..default()
+    };
+
+    match value {
+        NodeValue::ValueNode(val) => {
+            let ind = val as usize;
+            for bund in generate_bundle_from_asset(
+                ASSET_DICT[ind].0.as_slice(),
+                ASSET_DICT[ind].1.as_slice(),
+                ASSET_DICT[ind].2,
+            )
+            .iter()
+            .cloned()
+            {
+                parent.spawn(bund);
+            }
+        }
+        NodeValue::GateNode(val) => {
+            parent.spawn((
+                Text2d::new(format!("{}", val)),
+                text_font,
+                TextColor(Color::Srgba(YELLOW)),
+                Transform {
+                    translation: Vec2::splat(0.).extend(5.),
+                    ..default()
+                },
+            ));
+        }
+    }
 }
 
 fn on_drag(

@@ -4,6 +4,7 @@ use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 use bevy_egui::{EguiContextPass, EguiContexts, EguiPlugin};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use egui::Color32;
+use pure_circuit_lib::gates::{Gate, Value};
 
 pub struct UiPlugin;
 
@@ -19,7 +20,11 @@ impl Plugin for UiPlugin {
         )
         .add_systems(
             EguiContextPass,
-            cycle_enum_state::<ValueState>.run_if(input_just_pressed(KeyCode::KeyV)),
+            cycle_enum_state::<ValueState<Value>>.run_if(input_just_pressed(KeyCode::KeyV)),
+        )
+        .add_systems(
+            EguiContextPass,
+            cycle_enum_state::<ValueState<Gate>>.run_if(input_just_pressed(KeyCode::KeyB)),
         )
         .add_systems(EguiContextPass, render_ui_window);
     }
@@ -31,7 +36,8 @@ struct MainPassCube;
 fn render_ui_window(
     gate_state: Res<State<GateMode>>,
     mouse_state: Res<State<MouseState>>,
-    value_mode: Res<State<ValueState>>,
+    value_mode: Res<State<ValueState<Value>>>,
+    gate_mode: Res<State<ValueState<Gate>>>,
     mut contexts: EguiContexts,
 ) -> Result {
     let ctx = contexts.ctx_mut();
@@ -49,6 +55,9 @@ fn render_ui_window(
             ui.end_row();
             ui.label("Toggle Value Mode (Press V to togle):");
             ui.label(value_mode.to_string());
+            ui.end_row();
+            ui.label("Toggle Gate Mode (Press B to togle):");
+            ui.label(gate_mode.to_string());
             ui.end_row();
         });
     });
