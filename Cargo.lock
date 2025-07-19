@@ -4366,6 +4366,7 @@ version = "0.1.0"
 dependencies = [
  "enum-derived",
  "itertools 0.14.0",
+ "log",
  "macro_export",
  "misc-lib",
  "petgraph",

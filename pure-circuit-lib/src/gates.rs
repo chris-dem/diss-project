@@ -1,21 +1,56 @@
 use enum_derived::Rand;
-use itertools::Itertools;
 use macro_export::EnumCycle;
 use misc_lib::EnumCycle;
-use std::{
-    fmt::Display,
-};
-use strum::IntoEnumIterator;
+use std::fmt::Display;
 use strum_macros::EnumIter;
 
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Rand, PartialOrd, Ord, Default, EnumIter, Hash, EnumCycle,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Rand, Default, EnumIter, Hash, EnumCycle)]
 pub enum Value {
     #[default]
     Bot,
     Zero,
     One,
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Rand, Default, Hash)]
+pub struct InformationOrdering(pub Value);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Rand, Default, Hash)]
+pub struct VoltageOrdering(pub Value);
+
+impl PartialOrd for InformationOrdering {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match (self.0, other.0) {
+            (Value::Bot, Value::Zero) => Some(std::cmp::Ordering::Less),
+            (Value::Zero, Value::Bot) => Some(std::cmp::Ordering::Greater),
+            (Value::Bot, Value::One) => Some(std::cmp::Ordering::Less),
+            (Value::One, Value::Bot) => Some(std::cmp::Ordering::Greater),
+            _ => None,
+        }
+    }
+}
+
+impl PartialOrd for VoltageOrdering {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        let fst = match self.0 {
+            Value::Zero => 0,
+            Value::Bot => 1,
+            Value::One => 2,
+        };
+
+        let snd = match other.0 {
+            Value::Zero => 0,
+            Value::Bot => 1,
+            Value::One => 2,
+        };
+        fst.partial_cmp(&snd)
+    }
+}
+
+impl Ord for VoltageOrdering {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.partial_cmp(&other)
+            .expect("Should be `Some` for all instances")
+    }
 }
 
 #[derive(Debug)]
@@ -25,9 +60,8 @@ pub enum ConversionError {
     // Add other variants as needed
 }
 
-
 impl Value {
-    fn inverse(&self) -> Self {
+    fn inverse(self) -> Self {
         match self {
             Self::One => Self::Zero,
             Self::Zero => Self::One,
@@ -36,24 +70,11 @@ impl Value {
     }
 }
 
-pub trait GateCheck {
-    fn check(&self, u: Value, v: Value, w: Option<Value>) -> Option<bool>;
-}
-
-pub trait RestrictedGateCheck {
-    fn restricted_check(&self, u: Value, v: Value, w: Option<Value>) -> Option<bool>;
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Rand, Hash, EnumCycle, Default, EnumIter)]
-pub enum UnaryGate {
+pub enum Gate {
     #[default]
-    Not,
     Copy,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Rand, Hash, EnumCycle, Default, EnumIter)]
-pub enum BinaryGate {
-    #[default]
+    Not,
     And,
     Or,
     Nor,
@@ -61,168 +82,171 @@ pub enum BinaryGate {
     Purify,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Rand, Hash)]
-pub enum Gate {
-    Unary(UnaryGate),
-    Binary(BinaryGate),
-}
-
-impl IntoEnumIterator for Gate {
-    type Iterator = std::vec::IntoIter<Self>;
-
-    fn iter() -> Self::Iterator {
-        UnaryGate::iter()
-            .map(Self::Unary)
-            .chain(BinaryGate::iter().map(Self::Binary))
-            .collect_vec()
-            .into_iter()
-    }
-}
-
 impl Display for Gate {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GateError {
+    ArityError,
+    NonDeterminsticGate,
+}
+
+impl Gate {
+    pub fn arity(&self) -> (usize, usize) {
         match self {
-            Self::Unary(b) => write!(f, "{:?}", b),
-            Self::Binary(b) => write!(f, "{:?}", b),
+            Gate::Copy => (1, 1),
+            Gate::Not => (1, 1),
+            Gate::Purify => (1, 2),
+            _ => (2, 1),
         }
     }
-}
 
-impl Default for Gate {
-    fn default() -> Self {
-        Self::Unary(Default::default())
+    #[inline]
+    fn check_arity(&self, in_vals: &[Value], out_vals: &[Value]) -> bool {
+        let (ins, outs) = self.arity();
+        in_vals.len() == ins && out_vals.len() == outs
     }
-}
 
-impl EnumCycle for Gate {
-    fn toggle(&self) -> Self {
+    fn apply(self, in_vals: &[Value]) -> Result<Value, GateError> {
+        if in_vals.len() != self.arity().0 && self.arity().1 > 1 {
+            return Err(GateError::ArityError);
+        }
         match self {
-            Self::Unary(UnaryGate::Not) => Self::Binary(BinaryGate::And),
-            Self::Binary(BinaryGate::Purify) => Self::Unary(UnaryGate::Copy),
-            Self::Binary(b) => Self::Binary(b.toggle()),
-            Self::Unary(b) => Self::Unary(b.toggle()),
+            Self::Or => Ok(VoltageOrdering(in_vals[0])
+                .max(VoltageOrdering(in_vals[1]))
+                .0),
+            Self::And => Ok(VoltageOrdering(in_vals[0])
+                .min(VoltageOrdering(in_vals[1]))
+                .0),
+            Self::Copy => Ok(in_vals[0]),
+            Self::Not => Ok(in_vals[0].inverse()),
+            Self::Nor => Self::Or.apply(in_vals).map(Value::inverse),
+            Self::Nand => Self::And.apply(in_vals).map(Value::inverse),
+            Self::Purify => {
+                log::warn!("Purify does not have a deterministic application");
+                Err(GateError::NonDeterminsticGate)
+            }
         }
     }
-}
 
-impl GateCheck for Gate {
-    fn check(&self, u: Value, v: Value, w: Option<Value>) -> Option<bool> {
-        match self {
-            Gate::Unary(x) => x.check(u, v, w),
-            Gate::Binary(x) => x.check(u, v, w),
-        }
-    }
-}
-
-impl GateCheck for BinaryGate {
-    fn check(&self, u: Value, v: Value, w: Option<Value>) -> Option<bool> {
-        let w = w?;
-        Some(match self {
-            BinaryGate::Or => match (u, v) {
-                (Value::Zero, Value::Zero) => w == Value::Zero,
-                (Value::One, _) | (_, Value::One) => w == Value::One,
-                _ => true,
-            },
-            BinaryGate::And => match (u, v) {
-                (Value::One, Value::One) => w == Value::One,
-                (Value::Zero, _) | (_, Value::Zero) => w == Value::Zero,
-                _ => true,
-            },
-            BinaryGate::Nor => match (u, v) {
-                (Value::Zero, Value::Zero) => w == Value::One,
-                (Value::One, _) | (_, Value::One) => w == Value::Zero,
-                _ => true,
-            },
-            BinaryGate::Nand => match (u, v) {
-                (Value::One, Value::One) => w == Value::Zero,
-                (Value::Zero, _) | (_, Value::Zero) => w == Value::One,
-                _ => true,
-            },
-            BinaryGate::Purify => match u {
-                Value::Zero | Value::One => v == u && w == u,
-                _ => v > Value::Bot || w > Value::Bot,
-            },
-        })
-    }
-}
-
-impl GateCheck for UnaryGate {
-    fn check(&self, u: Value, v: Value, w: Option<Value>) -> Option<bool> {
-        if w.is_some() {
-            return None;
-        }
-        Some(match self {
-            UnaryGate::Not => match u {
-                Value::One => v == Value::Zero,
-                Value::Zero => v == Value::One,
-                _ => true,
-            },
-            UnaryGate::Copy => match u {
-                Value::One | Value::Zero => u == v,
-                _ => true,
-            },
-        })
-    }
-}
-
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub enum NodeValue {
-    GateNode(Gate),
-    ValueNode(Value),
-}
-
-impl NodeValue {
-    pub fn is_gate(&self) -> bool {
-        if let Self::GateNode(_) = self {
-            true
+    pub fn check(&self, in_vals: &[Value], out_vals: &[Value]) -> Result<bool, GateError> {
+        if !self.check_arity(in_vals, out_vals) {
+            Err(GateError::ArityError)
         } else {
-            false
+            match self {
+                Self::Purify => Ok(match in_vals[0] {
+                    Value::Bot => out_vals.contains(&Value::One) || out_vals.contains(&Value::Zero),
+                    b => out_vals == [b, b],
+                }),
+                b if out_vals.len() == 1 => b.apply(in_vals).map(|val| val == out_vals[0]),
+                b => unimplemented!("Gate {b:?} not implemented"),
+            }
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum GateStatus {
+    Valid,
+    InvalidArity,
+    InvalidValues,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum NewNode {
+    ValueNode(Value),
+    GateNode(Gate),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum NodeValue {
+    ValueNode(Value),
+    GateNode { gate: Gate, status: GateStatus },
 }
 
 mod tests {
     use super::*;
-    use itertools::{Itertools, assert_equal};
+    use itertools::Itertools;
+    use proptest::prelude::*;
+    use strum::IntoEnumIterator;
 
-    #[test]
-    fn test_gate_iter() {
-        assert_equal(
-            Gate::iter(),
-            UnaryGate::iter()
-                .map(Gate::Unary)
-                .chain(BinaryGate::iter().map(Gate::Binary)),
-        )
-    }
-
+    #[allow(dead_code)]
     fn data_generator_uni() -> impl Iterator<Item = (Value, Value)> {
         Value::iter().cartesian_product(Value::iter())
     }
 
+    #[allow(dead_code)]
     fn data_generator_bin() -> impl Iterator<Item = (Value, Value, Value)> {
         data_generator_uni()
             .cartesian_product(Value::iter())
             .map(|((a, b), c)| (a, b, c))
     }
 
+ 
+
+    mod errors {
+        use super::*;
+
+        #[test]
+        fn test_nondeterministic() {
+            for gate in Gate::iter() {
+                let inps = [Value::Bot, Value::Bot, Value::Bot];
+                let (s1, s2) = gate.arity();
+                let (inps, outs) = (&inps[0..s1], &inps[s1..s1 + s2]);
+                let res = gate.apply(inps);
+                if gate != Gate::Purify {
+                    assert!(res.is_ok());
+                } else {
+                    assert_eq!(res, Err(GateError::NonDeterminsticGate));
+                }
+            }
+        }
+
+        proptest! {
+            #[test]
+            fn test_arities(
+                gate in enum_strategy::<Gate>().prop_filter("Exclude non-deterministic", |gate| {
+                    match gate {
+                        Gate::Purify => false,
+                        _ => true,
+                    }
+                }),
+                in_values in proptest::collection::vec(
+                    enum_strategy::<Value>(),
+                    0..=10
+                ),
+                out_values in proptest::collection::vec(
+                    enum_strategy::<Value>(),
+                    0..=10
+                )
+            ) {
+                prop_assert_eq!(gate.check(&in_values, &out_values), Err(GateError::ArityError));
+            }
+        }
+    }
+
     mod unary_gates {
+        #[allow(unused_imports)]
         use super::*;
 
         #[test]
         fn test_not() {
             for (u, v) in data_generator_uni() {
-                let res = UnaryGate::Not.check(u, v, None);
-                assert!(res.is_some());
+                let res = Gate::Not.check(&[u], &[v]);
+                assert!(res.is_ok());
                 assert_eq!(
                     res,
-                    BinaryGate::Nor.check(u, u, Some(v)),
+                    Gate::Nor.check(&[u, u], &[v]),
                     "Value in {:?} Value out {:?}",
                     u,
                     v
                 );
                 assert_eq!(
                     res,
-                    BinaryGate::Nand.check(u, u, Some(v)),
+                    Gate::Nand.check(&[u, u], &[v]),
                     "Value in {:?} Value out {:?}",
                     u,
                     v
@@ -233,74 +257,65 @@ mod tests {
         #[test]
         fn test_copy() {
             for (u, v) in data_generator_uni() {
-                let res = UnaryGate::Copy.check(u, v, None);
-                assert!(res.is_some());
-                assert_eq!(res, BinaryGate::Or.check(u, u, Some(v)));
-                assert_eq!(res, BinaryGate::And.check(u, u, Some(v)));
+                let res = Gate::Copy.check(&[u], &[v]);
+                assert!(res.is_ok());
+                assert_eq!(res, Gate::Or.check(&[u, u], &[v]));
+                assert_eq!(res, Gate::And.check(&[u, u], &[v]));
             }
         }
     }
 
     mod binary_gates {
+        #[allow(unused_imports)]
         use super::*;
 
         #[test]
         fn test_and() {
             for (u, v, w) in data_generator_bin() {
-                let res = BinaryGate::And.check(u, v, Some(w));
-                assert!(res.is_some());
-                assert_eq!(
-                    res,
-                    BinaryGate::Nor.check(u.inverse(), v.inverse(), Some(w))
-                );
+                let res = Gate::And.check(&[u, v], &[w]);
+                assert!(res.is_ok());
+                assert_eq!(res, Gate::Nor.check(&[u.inverse(), v.inverse()], &[w]));
             }
         }
 
         #[test]
         fn test_nand() {
             for (u, v, w) in data_generator_bin() {
-                let res = BinaryGate::Nand.check(u, v, Some(w));
-                assert!(res.is_some());
-                assert_eq!(res, BinaryGate::Or.check(u.inverse(), v.inverse(), Some(w)));
+                let res = Gate::Nand.check(&[u, v], &[w]);
+                assert!(res.is_ok());
+                assert_eq!(res, Gate::Or.check(&[u.inverse(), v.inverse()], &[w]));
             }
         }
 
         #[test]
         fn test_or() {
             for (u, v, w) in data_generator_bin() {
-                let res = BinaryGate::Or.check(u, v, Some(w));
-                assert!(res.is_some());
-                assert_eq!(
-                    res,
-                    BinaryGate::Nand.check(u.inverse(), v.inverse(), Some(w))
-                );
+                let res = Gate::Or.check(&[u, v], &[w]);
+                assert!(res.is_ok());
+                assert_eq!(res, Gate::Nand.check(&[u.inverse(), v.inverse()], &[w]));
             }
         }
 
         #[test]
         fn test_nor() {
             for (u, v, w) in data_generator_bin() {
-                let res = BinaryGate::Nor.check(u, v, Some(w));
-                assert!(res.is_some());
-                assert_eq!(
-                    res,
-                    BinaryGate::And.check(u.inverse(), v.inverse(), Some(w))
-                );
+                let res = Gate::Nor.check(&[u, v], &[w]);
+                assert!(res.is_ok(), "{:?}", res);
+                assert_eq!(res, Gate::And.check(&[u.inverse(), v.inverse()], &[w]));
             }
         }
 
         #[test]
         fn test_purify() {
             for (u, v, w) in data_generator_bin() {
-                let res = BinaryGate::Purify.check(u, v, Some(w));
-                assert!(res.is_some());
-                let cp1 = UnaryGate::Copy.check(u, v, None).unwrap();
-                let cp2 = UnaryGate::Copy.check(u, w, None).unwrap();
+                let res = Gate::Purify.check(&[u], &[v, w]);
+                assert!(res.is_ok());
+                let cp1 = Gate::Copy.check(&[u], &[v]).unwrap();
+                let cp2 = Gate::Copy.check(&[u], &[w]).unwrap();
                 assert_eq!(
                     res,
-                    Some(
-                        (cp1 && cp2) && (u != Value::Bot || !(v == Value::Bot && w == Value::Bot))
-                    ),
+                    Ok((u != Value::Bot && cp1 && cp2)
+                        || (u == Value::Bot && ((v != Value::Bot) || (w != Value::Bot)))),
                     "Value in [{:?}] Value out [{:?}, {:?}]",
                     u,
                     v,
