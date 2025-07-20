@@ -62,12 +62,18 @@ impl PureCircuitGraph {
             .into_iter()
     }
 
+    pub fn update_node_status(&mut self, node_indx: NodeIndex) -> Result<NodeValue, GraphError> {
+        let incoming = self.get_neigh(node_indx, Direction::Incoming)?;
+        let outgoing = self.get_neigh(node_indx, Direction::Outgoing)?;
+        self.determine_node_status(node_indx, &incoming, &outgoing)
+    }
+
     fn determine_node_status(
         &mut self,
         node_idx: NodeIndex,
         in_neigh: &[Value],
         out_neigh: &[Value],
-    ) -> Result<(), GraphError> {
+    ) -> Result<NodeValue, GraphError> {
         let Some(NodeValue::GateNode { gate, status }) = self.graph.node_weight_mut(node_idx)
         else {
             return Err(GraphError::NotExistentNode);
@@ -86,7 +92,10 @@ impl PureCircuitGraph {
                 unreachable!("Check should not generate such error")
             }
         };
-        Ok(())
+        Ok(NodeValue::GateNode {
+            gate: gate,
+            status: *status,
+        })
     }
 
     #[inline]
@@ -153,10 +162,7 @@ impl PureCircuitGraph {
         };
 
         let ret = self.graph.add_edge(src_idx, dest_idx, value);
-
-        let incoming = self.get_neigh(gate_idx, Direction::Incoming)?;
-        let outgoing = self.get_neigh(gate_idx, Direction::Outgoing)?;
-        self.determine_node_status(gate_idx, &incoming, &outgoing)?;
+        self.update_node_status(gate_idx)?;
 
         Ok(ret)
     }
@@ -173,6 +179,7 @@ mod tests {
     use proptest::strategy::BoxedStrategy;
     use std::fmt::Debug;
 
+    #[allow(dead_code)]
     pub fn sample_from_slice<T: Debug + Clone + 'static>(values: &[T]) -> BoxedStrategy<T> {
         prop::sample::select(values.to_vec()).boxed()
     }
