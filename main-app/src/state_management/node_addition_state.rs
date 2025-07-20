@@ -1,8 +1,7 @@
 use crate::constants::{GATETEXT, GCOLOUR, VALTEXT, VCOLOUR};
 use bevy::{prelude::*, state::state::FreelyMutableState};
 use pure_circuit_lib::{
-	EnumCycle,
-	gates::{Gate, Value},
+	gates::{Gate, NewNode, Value}, EnumCycle
 };
 use std::fmt::Debug;
 use std::fmt::Display;
@@ -48,7 +47,7 @@ impl<T: ValueStateTraits> Display for ValueState<T> {
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, Component)]
-pub struct ValueComponent(pub NodeValue);
+pub struct ValueComponent(pub NewNode);
 
 #[derive(Debug, Clone, Copy, Default, Hash, PartialEq, Eq, Component)]
 pub struct Interactable;

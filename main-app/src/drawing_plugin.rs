@@ -5,15 +5,15 @@ use bevy::{
     prelude::*,
 };
 use bevy_prototype_lyon::prelude::*;
-use pure_circuit_lib::EnumCycle;
 use pure_circuit_lib::gates::{Gate, Value};
+use pure_circuit_lib::{EnumCycle, gates::NewNode};
 
 use crate::{
     assets::{ASSET_DICT, generate_bundle_from_asset},
     constants::D_RADIUS,
     state_management::{
         mouse_state::{MousePositions, MouseState},
-        node_addition_state::{GateMode, GraphNode, NodeValue, ValueComponent, ValueState},
+        node_addition_state::{GateMode, GraphNode, ValueComponent, ValueState},
     },
 };
 pub struct DrawingPlugin;
@@ -68,8 +68,8 @@ fn click_draw(
         return;
     };
     let val = match **gate_mode {
-        GateMode::Gate => NodeValue::GateNode(gate_state.0),
-        GateMode::Value => NodeValue::ValueNode(value_state.0),
+        GateMode::Gate => NewNode::GateNode(gate_state.0),
+        GateMode::Value => NewNode::ValueNode(value_state.0),
     };
 
     let mut entity = commands.spawn((
@@ -112,8 +112,8 @@ fn on_click(
     }
 
     current_value.0 = match current_value.0 {
-        NodeValue::GateNode(b) => NodeValue::GateNode(b.toggle()),
-        NodeValue::ValueNode(b) => NodeValue::ValueNode(b.toggle()),
+        NewNode::GateNode(b) => NewNode::GateNode(b.toggle()),
+        NewNode::ValueNode(b) => NewNode::ValueNode(b.toggle()),
     };
 
     commands
@@ -123,7 +123,7 @@ fn on_click(
 
 fn value_spawner(
     parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
-    value: NodeValue,
+    value: NewNode,
     asset_server: Res<AssetServer>,
 ) {
     let font = asset_server.load("fonts/FiraSans-Bold.ttf");
@@ -134,7 +134,7 @@ fn value_spawner(
     };
 
     match value {
-        NodeValue::ValueNode(val) => {
+        NewNode::ValueNode(val) => {
             let ind = val as usize;
             for bund in generate_bundle_from_asset(
                 ASSET_DICT[ind].0.as_slice(),
@@ -147,7 +147,7 @@ fn value_spawner(
                 parent.spawn(bund);
             }
         }
-        NodeValue::GateNode(val) => {
+        NewNode::GateNode(val) => {
             parent.spawn((
                 Text2d::new(format!("{}", val)),
                 text_font,
