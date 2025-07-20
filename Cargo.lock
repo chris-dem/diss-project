@@ -4364,6 +4364,7 @@ dependencies = [
 name = "pure-circuit-lib"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "enum-derived",
  "itertools 0.14.0",
  "log",
