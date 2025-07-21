@@ -6,14 +6,18 @@ use bevy::{
 };
 use bevy_prototype_lyon::prelude::*;
 use pure_circuit_lib::gates::{Gate, Value};
-use pure_circuit_lib::{EnumCycle, gates::NewNode};
+use pure_circuit_lib::{
+    EnumCycle,
+    gates::{GraphNode, NewNode, NodeUnitialised},
+};
 
 use crate::{
     assets::{ASSET_DICT, generate_bundle_from_asset},
     constants::D_RADIUS,
     state_management::{
         mouse_state::{MousePositions, MouseState},
-        node_addition_state::{GateMode, GraphNode, ValueComponent, ValueState},
+        node_addition_state::{GateMode, ValueComponent, ValueState},
+        state_init::PureCircuitResource,
     },
 };
 pub struct DrawingPlugin;
@@ -62,15 +66,17 @@ fn click_draw(
     value_state: Res<State<ValueState<Value>>>,
     gate_state: Res<State<ValueState<Gate>>>,
     asset_server: Res<AssetServer>,
+    mut pc_resource: ResMut<PureCircuitResource>,
     mut commands: Commands,
 ) {
     let Some(pos) = mouse_resource.0 else {
         return;
     };
     let val = match **gate_mode {
-        GateMode::Gate => NewNode::GateNode(gate_state.0),
-        GateMode::Value => NewNode::ValueNode(value_state.0),
+        GateMode::Gate => NodeUnitialised::from_gate(gate_state.0),
+        GateMode::Value => NodeUnitialised::from_value(value_state.0),
     };
+    let index = pc_resource.0.add_node(val);
 
     let mut entity = commands.spawn((
         ShapeBuilder::with(&shapes::Circle {
@@ -79,14 +85,14 @@ fn click_draw(
         })
         .fill(gate_mode.get_col())
         .build(),
-        GraphNode(**gate_mode),
-        ValueComponent(val),
+        ValueComponent(index),
         Pickable::default(),
         Transform {
             translation: pos.extend(0.),
             ..default()
         },
     ));
+    pc_resource.1.insert(index, entity.id());
     entity.with_children(|parent| value_spawner(parent, val, asset_server));
 
     entity
@@ -100,6 +106,7 @@ fn on_click(
     trigger: Trigger<Pointer<Click>>,
     mut query: Query<(&mut Children, Entity, &mut ValueComponent), With<ValueComponent>>,
     mut commands: Commands,
+    mut pc_resource: ResMut<PureCircuitResource>,
     asset_server: Res<AssetServer>,
 ) {
     let Ok((children, entity, ref mut current_value)) = query.get_mut(trigger.target) else {
@@ -111,19 +118,31 @@ fn on_click(
         commands.entity(entity).despawn();
     }
 
-    current_value.0 = match current_value.0 {
-        NewNode::GateNode(b) => NewNode::GateNode(b.toggle()),
-        NewNode::ValueNode(b) => NewNode::ValueNode(b.toggle()),
+    let node = match pc_resource.0.graph.node_weight(current_value.0).copied() {
+        Some(GraphNode::GateNode { gate, .. }) => NodeUnitialised::GateNode {
+            gate: gate.toggle(),
+            state_type: NewNode,
+        },
+        Some(GraphNode::ValueNode(b)) => NodeUnitialised::ValueNode(b.toggle()),
+        _ => {
+            error!("Node does not exist");
+            return;
+        }
     };
+
+    if let Err(err) = pc_resource.0.update_node(current_value.0, node) {
+        error!("Error updating node. Error {err:?}");
+        return;
+    }
 
     commands
         .entity(entity)
-        .with_children(|parent| value_spawner(parent, current_value.0, asset_server));
+        .with_children(|parent| value_spawner(parent, node, asset_server));
 }
 
 fn value_spawner(
     parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
-    value: NewNode,
+    value: NodeUnitialised,
     asset_server: Res<AssetServer>,
 ) {
     let font = asset_server.load("fonts/FiraSans-Bold.ttf");
@@ -134,7 +153,7 @@ fn value_spawner(
     };
 
     match value {
-        NewNode::ValueNode(val) => {
+        NodeUnitialised::ValueNode(val) => {
             let ind = val as usize;
             for bund in generate_bundle_from_asset(
                 ASSET_DICT[ind].0.as_slice(),
@@ -147,7 +166,8 @@ fn value_spawner(
                 parent.spawn(bund);
             }
         }
-        NewNode::GateNode(val) => {
+        NodeUnitialised::GateNode { gate: val, .. } => {
+            // TODO
             parent.spawn((
                 Text2d::new(format!("{}", val)),
                 text_font,

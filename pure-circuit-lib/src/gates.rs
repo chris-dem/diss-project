@@ -1,7 +1,8 @@
 use enum_derived::Rand;
 use macro_export::EnumCycle;
 use misc_lib::EnumCycle;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
+use std::hash::Hash;
 use strum_macros::EnumIter;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Rand, Default, EnumIter, Hash, EnumCycle)]
@@ -156,15 +157,73 @@ pub enum GateStatus {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum NewNode {
-    ValueNode(Value),
-    GateNode(Gate),
+pub enum NodeType {
+    Value,
+    Gate,
 }
 
+pub trait NodeStateTrait: Debug + Clone + Copy + PartialEq + Eq + Hash {}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum NodeValue {
+pub struct NewNode;
+
+impl NodeStateTrait for NewNode {}
+impl NodeStateTrait for GateStatus {}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum NodeValue<I: NodeStateTrait> {
     ValueNode(Value),
-    GateNode { gate: Gate, status: GateStatus },
+    GateNode { gate: Gate, state_type: I },
+}
+
+impl<T: NodeStateTrait> NodeValue<T> {
+    pub fn compare_types<I: NodeStateTrait>(&self, other: NodeValue<I>) -> bool {
+        match (self, other) {
+            (Self::GateNode { .. }, NodeValue::<I>::GateNode { .. }) => true,
+            (Self::ValueNode(_), NodeValue::<I>::ValueNode(_)) => true,
+            _ => false,
+        }
+    }
+}
+
+pub type NodeUnitialised = NodeValue<NewNode>;
+pub type GraphNode = NodeValue<GateStatus>;
+
+impl NodeUnitialised {
+    pub fn from_value(value: Value) -> Self {
+        Self::ValueNode(value)
+    }
+
+    pub fn from_gate(gate: Gate) -> Self {
+        Self::GateNode {
+            gate: gate,
+            state_type: NewNode,
+        }
+    }
+}
+
+impl<T: NodeStateTrait> EnumCycle for NodeValue<T> {
+    fn toggle(&self) -> Self {
+        match *self {
+            Self::GateNode { gate, state_type } => Self::GateNode {
+                gate: gate.toggle(),
+                state_type,
+            },
+            Self::ValueNode(b) => Self::ValueNode(b.toggle()),
+        }
+    }
+}
+
+impl<T: NodeStateTrait> NodeValue<T> {
+    pub fn is_gate(&self) -> bool {
+        matches!(
+            self,
+            Self::GateNode {
+                gate: _,
+                state_type: _
+            }
+        )
+    }
 }
 
 #[cfg(test)]

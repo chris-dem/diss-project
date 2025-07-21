@@ -1,6 +1,13 @@
-use bevy::{input::common_conditions::input_just_pressed, prelude::*};
-use pure_circuit_lib::gates::{Gate, Value};
 use crate::{misc::cycle_enum_state, state_management::node_addition_state::ValueState};
+use bevy::{
+    input::common_conditions::input_just_pressed, platform::collections::HashMap, prelude::*,
+};
+use pure_circuit_lib::{
+    gates::{Gate, Value},
+    graph::PureCircuitGraph,
+};
+
+use petgraph::prelude::*;
 
 use super::{
     edge_management::EdgeManagementPlugin,
@@ -8,12 +15,16 @@ use super::{
     node_addition_state::GateMode,
 };
 
+#[derive(Debug, Clone, Resource, Default)]
+pub struct PureCircuitResource(pub PureCircuitGraph, pub HashMap<NodeIndex, Entity>);
+
 pub struct StateManagementPlugin;
 
 impl Plugin for StateManagementPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(EdgeManagementPlugin)
             .init_state::<MouseState>()
+            .init_resource::<PureCircuitResource>()
             .init_state::<GateMode>()
             .init_state::<ValueState<Value>>()
             .init_state::<ValueState<Gate>>()
