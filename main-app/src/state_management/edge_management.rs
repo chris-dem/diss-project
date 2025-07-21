@@ -1,6 +1,5 @@
 use crate::{
     constants::D_RADIUS,
-    misc::compare_nodes,
     state_management::{node_addition_state::ValueComponent, state_init::PureCircuitResource},
 };
 use bevy::{
@@ -40,8 +39,6 @@ pub struct ObserverResource(Option<Entity>);
 #[derive(Default, Resource, Clone, Copy, PartialEq, Eq)]
 pub struct SelectedNodeMode(Option<NodeIndex>);
 
-type EdgePair = (Entity, Entity);
-
 impl Plugin for EdgeManagementPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PathBuilderResource>()
@@ -71,11 +68,11 @@ fn highlight_possible_nodes(
     query_node: Query<(&Transform, &ValueComponent)>,
     mut gizmos: Gizmos,
 ) {
-    let Some(mode) = selected_node_mode.0 else {
+    let Some(indx) = selected_node_mode.0 else {
         error!("Expected node to be set");
         return;
     };
-    let Some(mode) = pc_resource.0.graph.node_weight(g.0) else {
+    let Some(mode) = pc_resource.0.graph.node_weight(indx) else {
         error!("Node not found");
         return;
     };
@@ -177,9 +174,12 @@ fn on_click(
             //     return;
             // };
 
-            pc_resource
+            if let Err(e) = pc_resource
                 .0
-                .add_edge(selected_node.0.unwrap(), graph_node.0);
+                .add_edge(selected_node.0.unwrap(), graph_node.0)
+            {
+                error!("Error adding edge {e:?}")
+            };
             selected_node.0 = None;
             // path_builder.0 = None;
             next_mouse_state.set(mouse_state.toggle_state());
