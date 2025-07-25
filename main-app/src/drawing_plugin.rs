@@ -1,5 +1,8 @@
 use bevy::{
-    color::palettes::css::YELLOW,
+    color::palettes::{
+        css::YELLOW,
+        tailwind::{RED_200, RED_500},
+    },
     ecs::{observer::TriggerTargets, relationship::RelatedSpawnerCommands},
     input::common_conditions::{input_just_pressed, input_pressed},
     prelude::*,
@@ -8,7 +11,7 @@ use bevy_prototype_lyon::prelude::*;
 use pure_circuit_lib::gates::{Gate, Value};
 use pure_circuit_lib::{
     EnumCycle,
-    gates::{GraphNode, NewNode, NodeUnitialised},
+    gates::{GateStatus, GraphNode, NewNode, NodeUnitialised, NodeValue},
 };
 
 use crate::{
@@ -25,9 +28,13 @@ pub struct DrawingPlugin;
 #[derive(Component, Debug, Clone, Copy)]
 pub struct MouseCircle;
 
+#[derive(Debug, Clone, Copy, Component, PartialEq, Eq)]
+struct GateStatusComponent(GateStatus);
+
 impl Plugin for DrawingPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(bevy_svg::prelude::SvgPlugin)
+            .add_systems(Update, highlight_error_values)
             .add_systems(
                 PostUpdate,
                 hover_draw
@@ -44,6 +51,44 @@ impl Plugin for DrawingPlugin {
             );
     }
 }
+
+fn highlight_error_values(
+    query: Query<(Entity, &Children, &GateStatusComponent), Changed<GateStatusComponent>>,
+    mut commands: Commands,
+) {
+    for (entity, children, status_component) in query {
+        match status_component.0 {
+            GateStatus::Valid => {
+                let Some(err_circle) = children.last() else {
+                    error!("Should contain the error circle");
+                    continue;
+                };
+                commands.entity(*err_circle).despawn();
+            }
+            status => {
+                commands
+                    .entity(entity)
+                    .with_child(spawn_error_circle(status));
+            }
+        }
+    }
+}
+
+fn spawn_error_circle(status: GateStatus) -> impl Bundle {
+    let col = match status {
+        GateStatus::InvalidArity => Color::Srgba(RED_200),
+        GateStatus::InvalidValues => Color::Srgba(RED_500),
+        _ => panic!("Gate status cannot be valid"),
+    };
+    ShapeBuilder::with(&shapes::Circle {
+        center: Vec2::splat(0.),
+        radius: D_RADIUS + 5.,
+    })
+    .fill(col)
+    .build()
+}
+
+// fn draw_error_node() {}
 
 fn hover_draw(
     mouse_resource: Res<MousePositions>,
@@ -95,6 +140,21 @@ fn click_draw(
     pc_resource.1.insert(index, entity.id());
     entity.with_children(|parent| value_spawner(parent, val, asset_server));
 
+    if *gate_mode.get() == GateMode::Gate {
+        let Some(NodeValue::GateNode {
+            gate: _,
+            state_type,
+        }) = pc_resource.0.graph.node_weight(index)
+        else {
+            error!("Node should exist");
+            return;
+        };
+        entity.insert(GateStatusComponent(*state_type));
+        if *state_type != GateStatus::Valid {
+            entity.with_child(spawn_error_circle(*state_type));
+        }
+    }
+
     entity
         .observe(on_drag)
         .observe(on_hover_enter)
@@ -107,8 +167,13 @@ fn on_click(
     mut query: Query<(&mut Children, Entity, &mut ValueComponent), With<ValueComponent>>,
     mut commands: Commands,
     mut pc_resource: ResMut<PureCircuitResource>,
+    mouse_state: Res<State<MouseState>>,
     asset_server: Res<AssetServer>,
 ) {
+    if *mouse_state.get() == MouseState::Edge {
+        return;
+    }
+
     let Ok((children, entity, ref mut current_value)) = query.get_mut(trigger.target) else {
         warn!("Element not found");
         return;

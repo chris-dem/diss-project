@@ -39,6 +39,7 @@ pub struct ObserverResource(Option<Entity>);
 #[derive(Default, Resource, Clone, Copy, PartialEq, Eq)]
 pub struct SelectedNodeMode(Option<NodeIndex>);
 
+
 impl Plugin for EdgeManagementPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PathBuilderResource>()
