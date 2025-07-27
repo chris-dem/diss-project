@@ -29,7 +29,7 @@ pub struct DrawingPlugin;
 pub struct MouseCircle;
 
 #[derive(Debug, Clone, Copy, Component, PartialEq, Eq)]
-struct GateStatusComponent(GateStatus);
+pub(crate) struct GateStatusComponent(pub(crate) GateStatus);
 
 impl Plugin for DrawingPlugin {
     fn build(&self, app: &mut App) {
@@ -84,7 +84,7 @@ fn spawn_error_circle(status: GateStatus) -> impl Bundle {
         center: Vec2::splat(0.),
         radius: D_RADIUS + 5.,
     })
-    .fill(col)
+    .stroke(Stroke::new(col, 5.))
     .build()
 }
 

@@ -1,13 +1,16 @@
 use crate::{
     constants::D_RADIUS,
+    drawing_plugin::GateStatusComponent,
     state_management::{node_addition_state::ValueComponent, state_init::PureCircuitResource},
 };
 use bevy::{
     color::palettes::css::{ORANGE, RED},
     input::common_conditions::input_just_pressed,
     prelude::*,
+    state::commands,
 };
 use petgraph::prelude::*;
+use pure_circuit_lib::gates::NodeValue;
 
 use super::mouse_state::MouseState;
 
@@ -38,7 +41,6 @@ pub struct ObserverResource(Option<Entity>);
 
 #[derive(Default, Resource, Clone, Copy, PartialEq, Eq)]
 pub struct SelectedNodeMode(Option<NodeIndex>);
-
 
 impl Plugin for EdgeManagementPlugin {
     fn build(&self, app: &mut App) {
@@ -135,6 +137,7 @@ fn on_click(
     trigger: Trigger<Pointer<Click>>,
     query: Query<&ValueComponent>,
     mouse_state: Res<State<EdgeState>>,
+    mut gate_status_query: Query<&mut GateStatusComponent>,
     mut next_mouse_state: ResMut<NextState<EdgeState>>,
     mut path_builder: ResMut<PathBuilderResource>,
     mut selected_node: ResMut<SelectedNodeMode>,
@@ -152,11 +155,11 @@ fn on_click(
             next_mouse_state.set(mouse_state.toggle_state());
         }
         EdgeState::SelectedNode => {
-            let Some(sel_gate_mode) = selected_node
-                .0
-                .and_then(|ind| pc_resource.0.graph.node_weight(ind))
-                .copied()
-            else {
+            let Some(ind) = selected_node.0 else {
+                error!("No selected node");
+                return;
+            };
+            let Some(sel_gate_mode) = pc_resource.0.graph.node_weight(ind).copied() else {
                 error!("No selected node found");
                 return;
             };
@@ -175,14 +178,36 @@ fn on_click(
             //     return;
             // };
 
-            if let Err(e) = pc_resource
-                .0
-                .add_edge(selected_node.0.unwrap(), graph_node.0)
-            {
-                error!("Error adding edge {e:?}")
+            if let Err(e) = pc_resource.0.add_edge(ind, graph_node.0) {
+                error!("Error adding edge {e:?}");
+                return;
             };
+
+            let gate_indx = if current_node.is_gate() {
+                graph_node.0
+            } else {
+                ind
+            };
+
+            if let (
+                Some(mut ent),
+                Some(NodeValue::GateNode {
+                    gate: _,
+                    state_type,
+                }),
+            ) = (
+                pc_resource
+                    .1
+                    .get(&gate_indx)
+                    .and_then(|e| gate_status_query.get_mut(*e).ok()),
+                pc_resource.0.graph.node_weight(gate_indx),
+            ) {
+                ent.0 = *state_type;
+            } else {
+                error!("Entity does not exist");
+            };
+
             selected_node.0 = None;
-            // path_builder.0 = None;
             next_mouse_state.set(mouse_state.toggle_state());
         }
     };
