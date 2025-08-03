@@ -1,3 +1,5 @@
+use std::f32::consts::E;
+
 use bevy::{
     color::palettes::{
         css::YELLOW,
@@ -7,7 +9,8 @@ use bevy::{
     input::common_conditions::{input_just_pressed, input_pressed},
     prelude::*,
 };
-use bevy_prototype_lyon::prelude::*;
+use bevy_prototype_lyon::{prelude::*, shapes::Circle};
+use itertools::Itertools;
 use pure_circuit_lib::gates::{Gate, Value};
 use pure_circuit_lib::{
     EnumCycle,
@@ -54,25 +57,27 @@ impl Plugin for DrawingPlugin {
 
 fn highlight_error_values(
     query: Query<(Entity, &Children, &GateStatusComponent), Changed<GateStatusComponent>>,
+    query_err: Query<Entity, With<ErrorCircle>>,
     mut commands: Commands,
 ) {
-    for (entity, children, status_component) in query {
+    for (ent, children, status_component) in query {
         match status_component.0 {
             GateStatus::Valid => {
-                let Some(err_circle) = children.last() else {
-                    error!("Should contain the error circle");
-                    continue;
-                };
-                commands.entity(*err_circle).despawn();
+                for child in children {
+                    if let Ok(child) = query_err.get(*child) {
+                        commands.entity(child).despawn();
+                    }
+                }
             }
             status => {
-                commands
-                    .entity(entity)
-                    .with_child(spawn_error_circle(status));
+                commands.entity(ent).with_child(spawn_error_circle(status));
             }
         }
     }
 }
+
+#[derive(Debug, Clone, Copy, Component)]
+pub(crate) struct ErrorCircle;
 
 fn spawn_error_circle(status: GateStatus) -> impl Bundle {
     let col = match status {
@@ -80,15 +85,17 @@ fn spawn_error_circle(status: GateStatus) -> impl Bundle {
         GateStatus::InvalidValues => Color::Srgba(RED_500),
         _ => panic!("Gate status cannot be valid"),
     };
-    ShapeBuilder::with(&shapes::Circle {
-        center: Vec2::splat(0.),
-        radius: D_RADIUS + 5.,
-    })
-    .stroke(Stroke::new(col, 5.))
-    .build()
-}
 
-// fn draw_error_node() {}
+    (
+        ShapeBuilder::with(&shapes::Circle {
+            center: Vec2::splat(0.),
+            radius: D_RADIUS + 10.,
+        })
+        .stroke(Stroke::new(col, 5.))
+        .build(),
+        ErrorCircle,
+    )
+}
 
 fn hover_draw(
     mouse_resource: Res<MousePositions>,
@@ -133,7 +140,7 @@ fn click_draw(
         ValueComponent(index),
         Pickable::default(),
         Transform {
-            translation: pos.extend(0.),
+            translation: pos.extend(10.),
             ..default()
         },
     ));
@@ -150,9 +157,6 @@ fn click_draw(
             return;
         };
         entity.insert(GateStatusComponent(*state_type));
-        if *state_type != GateStatus::Valid {
-            entity.with_child(spawn_error_circle(*state_type));
-        }
     }
 
     entity
@@ -164,7 +168,8 @@ fn click_draw(
 
 fn on_click(
     trigger: Trigger<Pointer<Click>>,
-    mut query: Query<(&mut Children, Entity, &mut ValueComponent), With<ValueComponent>>,
+    mut query: Query<(Entity, &mut ValueComponent), With<ValueComponent>>,
+    mut query_gate: Query<&mut GateStatusComponent>,
     mut commands: Commands,
     mut pc_resource: ResMut<PureCircuitResource>,
     mouse_state: Res<State<MouseState>>,
@@ -174,14 +179,11 @@ fn on_click(
         return;
     }
 
-    let Ok((children, entity, ref mut current_value)) = query.get_mut(trigger.target) else {
+    let Ok((entity, ref mut current_value)) = query.get_mut(trigger.target) else {
         warn!("Element not found");
         return;
     };
-
-    for entity in children.entities() {
-        commands.entity(entity).despawn();
-    }
+    commands.entity(entity).despawn_related::<Children>();
 
     let node = match pc_resource.0.graph.node_weight(current_value.0).copied() {
         Some(GraphNode::GateNode { gate, .. }) => NodeUnitialised::GateNode {
@@ -195,14 +197,25 @@ fn on_click(
         }
     };
 
-    if let Err(err) = pc_resource.0.update_node(current_value.0, node) {
-        error!("Error updating node. Error {err:?}");
-        return;
-    }
-
+    let gates = match pc_resource.0.update_node(current_value.0, node) {
+        Ok(many) => many,
+        Err(err) => {
+            error!("Error updating node. Error {err:?}");
+            return;
+        }
+    };
     commands
         .entity(entity)
         .with_children(|parent| value_spawner(parent, node, asset_server));
+    for (indx, status) in gates {
+        if let Some(mut v) = pc_resource
+            .1
+            .get(&indx)
+            .and_then(|e| query_gate.get_mut(*e).ok())
+        {
+            v.0 = status;
+        }
+    }
 }
 
 fn value_spawner(

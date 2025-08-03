@@ -186,6 +186,8 @@ impl<T: NodeStateTrait> NodeValue<T> {
     }
 }
 
+
+
 pub type NodeUnitialised = NodeValue<NewNode>;
 pub type GraphNode = NodeValue<GateStatus>;
 

@@ -1,4 +1,4 @@
-use petgraph::prelude::*;
+use petgraph::{prelude::*, visit::IntoNeighborsDirected};
 use strum_macros::Display;
 
 use crate::gates::{GateError, GateStatus, GraphNode, NewNode, NodeUnitialised, NodeValue, Value};
@@ -40,7 +40,7 @@ impl PureCircuitGraph {
         &mut self,
         index: NodeIndex,
         new_value: NodeUnitialised,
-    ) -> Result<(), GraphError> {
+    ) -> Result<Box<[(NodeIndex, GateStatus)]>, GraphError> {
         let node = self
             .graph
             .node_weight_mut(index)
@@ -55,16 +55,35 @@ impl PureCircuitGraph {
 
         match copied_node {
             NodeValue::GateNode { .. } => {
-                self.update_node_status(index)?;
+                let gate = self.update_node_status(index).and_then(|g| {
+                    if let NodeValue::GateNode { state_type, .. } = g {
+                        Ok(state_type)
+                    } else {
+                        Err(GraphError::InvalidUpdate)
+                    }
+                })?;
+                Ok(Box::new([(index, gate)]))
             }
             NodeValue::ValueNode(_) => {
-                for n in self.graph.neighbors(index).collect::<Box<[NodeIndex]>>() {
-                    self.update_node_status(n)?;
+                let mut ret = Vec::new();
+                for n in self
+                    .graph
+                    .neighbors_directed(index, Direction::Incoming)
+                    .chain(self.graph.neighbors_directed(index, Direction::Outgoing))
+                    .collect::<Box<[NodeIndex]>>()
+                {
+                    let status = self.update_node_status(n).and_then(|g| {
+                        if let NodeValue::GateNode { state_type, .. } = g {
+                            Ok(state_type)
+                        } else {
+                            Err(GraphError::InvalidUpdate)
+                        }
+                    })?;
+                    ret.push((n, status));
                 }
+                Ok(ret.iter().copied().collect::<_>())
             }
-        };
-
-        Ok(())
+        }
     }
 
     pub fn get_error_gates(&self) -> impl Iterator<Item = (NodeIndex, GraphNode)> {

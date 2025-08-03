@@ -7,7 +7,6 @@ use bevy::{
     color::palettes::css::{ORANGE, RED},
     input::common_conditions::input_just_pressed,
     prelude::*,
-    state::commands,
 };
 use petgraph::prelude::*;
 use pure_circuit_lib::gates::NodeValue;
