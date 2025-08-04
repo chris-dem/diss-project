@@ -1,15 +1,13 @@
-use std::f32::consts::E;
-
 use bevy::{
     color::palettes::{
         css::YELLOW,
         tailwind::{RED_200, RED_500},
     },
-    ecs::{observer::TriggerTargets, relationship::RelatedSpawnerCommands},
+    ecs::relationship::RelatedSpawnerCommands,
     input::common_conditions::{input_just_pressed, input_pressed},
     prelude::*,
 };
-use bevy_prototype_lyon::{prelude::*, shapes::Circle};
+use bevy_prototype_lyon::prelude::*;
 use itertools::Itertools;
 use pure_circuit_lib::gates::{Gate, Value};
 use pure_circuit_lib::{
@@ -36,7 +34,14 @@ pub(crate) struct GateStatusComponent(pub(crate) GateStatus);
 
 impl Plugin for DrawingPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(bevy_svg::prelude::SvgPlugin)
+        app.init_resource::<HoveredNode>()
+            .add_plugins(bevy_svg::prelude::SvgPlugin)
+            .add_systems(
+                Update,
+                on_hover_del
+                    .run_if(input_just_pressed(KeyCode::KeyD))
+                    .run_if(not(resource_equals(HoveredNode(None)))),
+            )
             .add_systems(Update, highlight_error_values)
             .add_systems(
                 PostUpdate,
@@ -61,15 +66,15 @@ fn highlight_error_values(
     mut commands: Commands,
 ) {
     for (ent, children, status_component) in query {
-        match status_component.0 {
-            GateStatus::Valid => {
-                for child in children {
-                    if let Ok(child) = query_err.get(*child) {
-                        commands.entity(child).despawn();
-                    }
-                }
+        for child in children {
+            if let Ok(child) = query_err.get(*child) {
+                commands.entity(child).despawn();
             }
+        }
+        match status_component.0 {
+            GateStatus::Valid => (),
             status => {
+                info!("Adding error circles{status_component:?}");
                 commands.entity(ent).with_child(spawn_error_circle(status));
             }
         }
@@ -190,7 +195,7 @@ fn on_click(
             gate: gate.toggle(),
             state_type: NewNode,
         },
-        Some(GraphNode::ValueNode(b)) => NodeUnitialised::ValueNode(b.toggle()),
+        Some(GraphNode::ValueNode(b)) => dbg!(NodeUnitialised::ValueNode(b.toggle())),
         _ => {
             error!("Node does not exist");
             return;
@@ -218,6 +223,9 @@ fn on_click(
     }
 }
 
+#[derive(Debug, Clone, Resource, Default, PartialEq, Eq)]
+struct HoveredNode(Option<Entity>);
+
 fn value_spawner(
     parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
     value: NodeUnitialised,
@@ -232,7 +240,8 @@ fn value_spawner(
 
     match value {
         NodeUnitialised::ValueNode(val) => {
-            let ind = val as usize;
+            let ind: usize = val.into();
+            dbg!(ind, val);
             for bund in generate_bundle_from_asset(
                 ASSET_DICT[ind].0.as_slice(),
                 ASSET_DICT[ind].1.as_slice(),
@@ -274,16 +283,48 @@ fn on_drag(
     }
 }
 
-fn on_hover_enter(trigger: Trigger<Pointer<Over>>, mut query: Query<&mut Shape, With<Pickable>>) {
-    let Ok(ref mut pos) = query.get_mut(trigger.target) else {
+fn on_hover_del(
+    key: Res<ButtonInput<KeyCode>>,
+    query_indx: Query<&ValueComponent>,
+    mut hovered_node: ResMut<HoveredNode>,
+    mut pc_resource: ResMut<PureCircuitResource>,
+    mut commands: Commands,
+) {
+    let Some(target) = hovered_node.0.take() else {
+        error!("Entity should be stored");
         return;
     };
-    pos.stroke = Some(Stroke::new(Color::from(YELLOW), 5.))
+    let Ok(ValueComponent(indx)) = query_indx.get(target) else {
+        error!("Node with out index");
+        return;
+    };
+    if key.just_pressed(KeyCode::KeyD) {
+        commands.entity(target).despawn();
+        pc_resource.1.remove(indx);
+        pc_resource.0.graph.remove_node(*indx);
+    }
 }
 
-fn on_hover_exit(trigger: Trigger<Pointer<Out>>, mut query: Query<&mut Shape, With<Pickable>>) {
+fn on_hover_enter(
+    trigger: Trigger<Pointer<Over>>,
+    mut query: Query<&mut Shape, With<Pickable>>,
+    mut hovered_node: ResMut<HoveredNode>,
+) {
     let Ok(ref mut pos) = query.get_mut(trigger.target) else {
         return;
     };
+    hovered_node.0 = Some(trigger.target);
+    pos.stroke = Some(Stroke::new(Color::from(YELLOW), 5.));
+}
+
+fn on_hover_exit(
+    trigger: Trigger<Pointer<Out>>,
+    mut query: Query<&mut Shape, With<Pickable>>,
+    mut hovered_node: ResMut<HoveredNode>,
+) {
+    let Ok(ref mut pos) = query.get_mut(trigger.target) else {
+        return;
+    };
+    hovered_node.0 = None;
     pos.stroke = None;
 }

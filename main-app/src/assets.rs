@@ -59,9 +59,9 @@ const ONE_PATH: StringPaths = [
 ];
 
 pub(crate) const ASSET_DICT: [(AffinePaths, StringPaths, (f32, f32)); 3] = [
-	(ZERO_TRANS, ZERO_PATHS, (2.5, -5.)),
 	(ONE_TRANS, ONE_PATH, (3., -1.)),
 	(BOT_TRANS, BOT_PATHS, (-5., -5.)),
+	(ZERO_TRANS, ZERO_PATHS, (2.5, -5.)),
 ];
 
 #[inline]

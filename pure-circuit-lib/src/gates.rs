@@ -12,6 +12,13 @@ pub enum Value {
     Zero,
     One,
 }
+
+impl Into<usize> for Value {
+    fn into(self) -> usize {
+        ((self as usize) + 1) % 3
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Rand, Default, Hash)]
 pub struct InformationOrdering(pub Value);
 
@@ -185,8 +192,6 @@ impl<T: NodeStateTrait> NodeValue<T> {
         }
     }
 }
-
-
 
 pub type NodeUnitialised = NodeValue<NewNode>;
 pub type GraphNode = NodeValue<GateStatus>;
