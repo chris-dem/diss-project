@@ -187,6 +187,13 @@ impl PureCircuitGraph {
             .collect::<Result<_, _>>()
     }
 
+    pub fn get_all_neigh(&self, indx: NodeIndex) -> Box<[NodeIndex]> {
+        self.graph
+            .neighbors_directed(indx, Direction::Incoming)
+            .chain(self.graph.neighbors_directed(indx, Direction::Outgoing))
+            .collect::<Box<[_]>>()
+    }
+
     pub fn add_edge(
         &mut self,
         src_idx: NodeIndex,
