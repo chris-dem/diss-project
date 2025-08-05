@@ -1,4 +1,4 @@
-use crate::{misc::cycle_enum_state, state_management::node_addition_state::ValueState};
+use crate::{misc::cycle_enum_state, state_management::{mouse_state::EdgeManagementState, node_addition_state::ValueState}};
 use bevy::{
     input::common_conditions::input_just_pressed, platform::collections::HashMap, prelude::*,
 };
@@ -24,6 +24,7 @@ impl Plugin for StateManagementPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(EdgeManagementPlugin)
             .init_state::<MouseState>()
+            .init_state::<EdgeManagementState>()
             .init_resource::<PureCircuitResource>()
             .init_state::<GateMode>()
             .init_state::<ValueState<Value>>()

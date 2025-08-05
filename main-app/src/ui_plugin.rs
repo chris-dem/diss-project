@@ -1,3 +1,4 @@
+use crate::state_management::mouse_state::EdgeManagementState;
 use crate::state_management::node_addition_state::{GateMode, ValueState};
 use crate::{misc::cycle_enum_state, state_management::mouse_state::MouseState};
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
@@ -36,6 +37,7 @@ struct MainPassCube;
 fn render_ui_window(
     gate_state: Res<State<GateMode>>,
     mouse_state: Res<State<MouseState>>,
+    edge_management_state: Res<State<EdgeManagementState>>,
     value_mode: Res<State<ValueState<Value>>>,
     gate_mode: Res<State<ValueState<Gate>>>,
     mut contexts: EguiContexts,
@@ -58,6 +60,9 @@ fn render_ui_window(
             ui.end_row();
             ui.label("Toggle Gate Mode (Press B to togle):");
             ui.label(gate_mode.to_string());
+            ui.end_row();
+            ui.label("Toggle Edge Mode (Press J to togle):");
+            ui.label(edge_management_state.to_string());
             ui.end_row();
         });
     });

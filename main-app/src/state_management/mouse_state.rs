@@ -12,6 +12,13 @@ pub enum MouseState {
     Edge,
 }
 
+#[derive(Debug, Clone, Copy, Default, States, PartialEq, Eq, Hash, EnumCycle)]
+pub enum EdgeManagementState {
+    #[default]
+    AddEdge,
+    RemoveEdges,
+}
+
 impl Display for MouseState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -21,6 +28,14 @@ impl Display for MouseState {
     }
 }
 
+impl Display for EdgeManagementState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::AddEdge => write!(f, "Add Edge"),
+            Self::RemoveEdges => write!(f, "Remove Edge"),
+        }
+    }
+}
 #[derive(Resource, Clone, Copy, Debug, Default)]
 pub struct MousePositions(pub Option<Vec2>);
 

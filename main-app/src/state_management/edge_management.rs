@@ -1,15 +1,18 @@
 use crate::{
     constants::D_RADIUS,
     drawing_plugin::GateStatusComponent,
-    state_management::{node_addition_state::ValueComponent, state_init::PureCircuitResource},
+    state_management::{
+        mouse_state::EdgeManagementState, node_addition_state::ValueComponent,
+        state_init::PureCircuitResource,
+    },
 };
 use bevy::{
     color::palettes::css::{ORANGE, RED},
-    input::common_conditions::input_just_pressed,
+    input::common_conditions::{input_just_pressed, input_pressed},
     prelude::*,
 };
 use petgraph::prelude::*;
-use pure_circuit_lib::gates::NodeValue;
+use pure_circuit_lib::{EnumCycle, gates::NodeValue};
 
 use super::mouse_state::MouseState;
 
@@ -23,8 +26,8 @@ pub enum EdgeState {
     SelectedNode,
 }
 
-impl EdgeState {
-    fn toggle_state(&self) -> Self {
+impl EnumCycle for EdgeState {
+    fn toggle(&self) -> Self {
         match self {
             Self::SelectedNode => Self::DefaultState,
             Self::DefaultState => Self::SelectedNode,
@@ -57,6 +60,18 @@ impl Plugin for EdgeManagementPlugin {
             )
             .add_systems(
                 Update,
+                reset_edge_mode
+                    .run_if(in_state(MouseState::Edge))
+                    .run_if(state_changed::<EdgeManagementState>),
+            )
+            .add_systems(
+                Update,
+                edge_management_toggle
+                    .run_if(in_state(MouseState::Edge))
+                    .run_if(input_pressed(KeyCode::KeyJ)),
+            )
+            .add_systems(
+                Update,
                 highlight_possible_nodes.run_if(in_state(EdgeState::SelectedNode)),
             )
             .add_systems(OnExit(MouseState::Edge), remove_edge_detection)
@@ -64,10 +79,18 @@ impl Plugin for EdgeManagementPlugin {
     }
 }
 
+fn edge_management_toggle(
+    state: Res<State<EdgeManagementState>>,
+    mut next_state: ResMut<NextState<EdgeManagementState>>,
+) {
+    next_state.set(state.get().toggle());
+}
+
 fn highlight_possible_nodes(
     selected_node_mode: Res<SelectedNodeMode>,
+    edge_management_substate: Res<State<EdgeManagementState>>,
     pc_resource: Res<PureCircuitResource>,
-    query_node: Query<(&Transform, &ValueComponent)>,
+    mut query_node: Query<(&Transform, &ValueComponent)>,
     mut gizmos: Gizmos,
 ) {
     let Some(indx) = selected_node_mode.0 else {
@@ -78,14 +101,31 @@ fn highlight_possible_nodes(
         error!("Node not found");
         return;
     };
-
-    for (t, g) in query_node {
-        let Some(w) = pc_resource.0.graph.node_weight(g.0) else {
-            error!("Node not found");
-            continue;
-        };
-        if !w.compare_types(*mode) {
-            gizmos.circle_2d(t.translation.xy(), D_RADIUS + 5., ORANGE);
+    match edge_management_substate.get() {
+        EdgeManagementState::AddEdge => {
+            for (t, g) in query_node {
+                let Some(w) = pc_resource.0.graph.node_weight(g.0) else {
+                    error!("Node not found");
+                    continue;
+                };
+                if !w.compare_types(*mode) {
+                    gizmos.circle_2d(t.translation.xy(), D_RADIUS + 5., ORANGE);
+                }
+            }
+        }
+        EdgeManagementState::RemoveEdges => {
+            let mut lens = query_node.transmute_lens::<&Transform>();
+            for ind in pc_resource.0.get_all_neigh(indx) {
+                let Some(ent) = pc_resource.1.get(&ind) else {
+                    error!("Index not updated");
+                    continue;
+                };
+                let Ok(trans) = lens.query().get(*ent).copied() else {
+                    error!("Entity not found in query");
+                    continue;
+                };
+                gizmos.circle_2d(trans.translation.xy(), D_RADIUS + 5., ORANGE);
+            }
         }
     }
 }
@@ -151,7 +191,7 @@ fn on_click(
         EdgeState::DefaultState => {
             path_builder.0 = Some(trigger.target());
             selected_node.0 = Some(graph_node.0);
-            next_mouse_state.set(mouse_state.toggle_state());
+            next_mouse_state.set(mouse_state.toggle());
         }
         EdgeState::SelectedNode => {
             let Some(ind) = selected_node.0 else {
@@ -207,7 +247,7 @@ fn on_click(
             };
 
             selected_node.0 = None;
-            next_mouse_state.set(mouse_state.toggle_state());
+            next_mouse_state.set(mouse_state.toggle());
         }
     };
 }
