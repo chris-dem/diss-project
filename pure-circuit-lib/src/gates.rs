@@ -1,6 +1,7 @@
 use enum_derived::Rand;
 use macro_export::EnumCycle;
 use misc_lib::EnumCycle;
+use petgraph::Graph;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use strum_macros::EnumIter;
@@ -195,6 +196,28 @@ impl<T: NodeStateTrait> NodeValue<T> {
 
 pub type NodeUnitialised = NodeValue<NewNode>;
 pub type GraphNode = NodeValue<GateStatus>;
+
+#[derive(Debug, Clone, Copy)]
+pub struct GraphStruct<T> {
+    pub node: GraphNode,
+    pub additional_info: T,
+}
+
+impl<T> GraphStruct<T> {
+    pub fn new(node: GraphNode, additional_info: T) -> Self {
+        Self {
+            node,
+            additional_info,
+        }
+    }
+    pub fn into_node(&self) -> GraphNode {
+        self.node
+    }
+}
+
+// impl Copy for GraphStruct<T> {
+
+// }
 
 impl NodeUnitialised {
     pub fn from_value(value: Value) -> Self {

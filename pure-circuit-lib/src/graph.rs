@@ -1,19 +1,20 @@
 use itertools::Itertools;
-use petgraph::{
-    graph::{Edge, EdgesConnecting},
-    prelude::*,
-    visit::IntoNeighborsDirected,
-};
+use petgraph::{graph::Edge, prelude::*};
+use std::fmt::Debug;
 use strum_macros::Display;
 
-use crate::gates::{GateError, GateStatus, GraphNode, NewNode, NodeUnitialised, NodeValue, Value};
+use crate::gates::{
+    GateError, GateStatus, GraphNode, GraphStruct, NewNode, NodeUnitialised, NodeValue, Value,
+};
+
+pub type BoxArray<T> = Box<[T]>;
 
 #[derive(Debug, Clone)]
-pub struct PureCircuitGraph {
-    pub graph: DiGraph<GraphNode, u64>,
+pub struct PureCircuitGraph<T, G> {
+    pub graph: DiGraph<GraphStruct<T>, (u64, G)>,
 }
 
-impl Default for PureCircuitGraph {
+impl<T: Default + Debug, G: Debug> Default for PureCircuitGraph<T, G> {
     fn default() -> Self {
         Self {
             graph: Default::default(),
@@ -31,12 +32,14 @@ pub enum GraphError {
 
 impl std::error::Error for GraphError {}
 
-impl PureCircuitGraph {
+impl<T: Debug + Default, G: Debug> PureCircuitGraph<T, G> {
     pub fn new() -> Self {
         Self::default()
     }
+}
 
-    pub fn get_edges(&self) -> impl Iterator<Item = (NodeIndex, NodeIndex, u64)> {
+impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
+    pub fn get_edges(&self) -> impl Iterator<Item = (NodeIndex, NodeIndex, (u64, G))> {
         self.graph
             .edge_references()
             .map(|r| (r.source(), r.target(), *r.weight()))
@@ -46,14 +49,14 @@ impl PureCircuitGraph {
         &mut self,
         index: NodeIndex,
         new_value: NodeUnitialised,
-    ) -> Result<Box<[(NodeIndex, GateStatus)]>, GraphError> {
+    ) -> Result<Box<[NodeIndex]>, GraphError> {
         let node = self
             .graph
             .node_weight_mut(index)
             .ok_or(GraphError::NotExistentNode)?;
 
-        let copied_node = *node;
-        match (node, new_value) {
+        let copied_node = node.node;
+        match (&mut node.node, new_value) {
             (NodeValue::GateNode { gate, .. }, NodeValue::GateNode { gate: g, .. }) => *gate = g,
             (NodeValue::ValueNode(val), NodeValue::ValueNode(e)) => *val = e,
             _ => return Err(GraphError::InvalidUpdate),
@@ -61,63 +64,52 @@ impl PureCircuitGraph {
 
         match copied_node {
             NodeValue::GateNode { .. } => {
-                let gate = self.update_node_status(index).and_then(|g| {
-                    if let NodeValue::GateNode { state_type, .. } = g {
-                        Ok(state_type)
-                    } else {
-                        Err(GraphError::InvalidUpdate)
-                    }
-                })?;
-                Ok(Box::new([(index, gate)]))
+                self.update_node_status(index)?;
+                Ok(Box::new([index]))
             }
             NodeValue::ValueNode(_) => {
-                let mut ret = Vec::new();
-                for n in self
-                    .graph
-                    .neighbors_directed(index, Direction::Incoming)
-                    .chain(self.graph.neighbors_directed(index, Direction::Outgoing))
-                    .collect::<Box<[NodeIndex]>>()
-                {
-                    let status = self.update_node_status(n).and_then(|g| {
-                        if let NodeValue::GateNode { state_type, .. } = g {
-                            Ok(state_type)
-                        } else {
-                            Err(GraphError::InvalidUpdate)
-                        }
-                    })?;
-                    ret.push((n, status));
+                let ret = self.get_all_neigh(index);
+                for n in ret.iter().copied() {
+                    self.update_node_status(n)?;
                 }
-                Ok(ret.iter().copied().collect::<_>())
+                Ok(ret)
             }
         }
     }
 
-    pub fn get_error_gates(&self) -> impl Iterator<Item = (NodeIndex, GraphNode)> {
+    pub fn get_error_gates(&self) -> impl Iterator<Item = NodeIndex> {
         self.graph
             .node_weights()
+            .map(GraphStruct::into_node)
             .enumerate()
             .filter_map(|(idx, node_val)| match node_val {
-                NodeValue::GateNode { .. } => Some((NodeIndex::new(idx), *node_val)),
+                GraphNode::GateNode { .. } => Some(NodeIndex::new(idx)),
                 NodeValue::ValueNode(_) => None,
             })
     }
 
-    pub fn add_node(&mut self, node: NodeUnitialised) -> NodeIndex {
+    pub fn add_node(&mut self, node: NodeUnitialised, additional_info: T) -> NodeIndex {
         match node {
-            NodeValue::GateNode { gate: g, .. } => self.graph.add_node(GraphNode::GateNode {
-                gate: g,
-                state_type: GateStatus::InvalidArity,
+            NodeValue::GateNode { gate: g, .. } => self.graph.add_node(GraphStruct {
+                node: GraphNode::GateNode {
+                    gate: g,
+                    state_type: GateStatus::InvalidArity,
+                },
+                additional_info: additional_info,
             }),
-            NodeValue::ValueNode(v) => self.graph.add_node(NodeValue::ValueNode(v)),
+            NodeValue::ValueNode(v) => self.graph.add_node(GraphStruct::<T>::new(
+                NodeValue::ValueNode(v),
+                additional_info,
+            )),
         }
     }
 
     pub fn add_nodes(
         &mut self,
-        nodes: impl Iterator<Item = NodeValue<NewNode>>,
+        nodes: impl Iterator<Item = (NodeValue<NewNode>, T)>,
     ) -> impl Iterator<Item = NodeIndex> {
         nodes
-            .map(|x| self.add_node(x))
+            .map(|x| self.add_node(x.0, x.1))
             .collect::<Box<[NodeIndex]>>()
             .into_iter()
     }
@@ -137,7 +129,10 @@ impl PureCircuitGraph {
         in_neigh: &[Value],
         out_neigh: &[Value],
     ) -> Result<NodeValue<GateStatus>, GraphError> {
-        let Some(NodeValue::GateNode { gate, state_type }) = self.graph.node_weight_mut(node_idx)
+        let Some(GraphStruct {
+            node: NodeValue::GateNode { gate, state_type },
+            ..
+        }) = self.graph.node_weight_mut(node_idx)
         else {
             return Err(GraphError::NotExistentNode);
         };
@@ -166,9 +161,8 @@ impl PureCircuitGraph {
         (
             self.graph
                 .edges_directed(indx, dir)
-                .map(|e| e.weight())
+                .map(|e| e.weight().0)
                 .max()
-                .copied()
                 .unwrap_or(0)
                 + 1,
             indx,
@@ -184,7 +178,9 @@ impl PureCircuitGraph {
         self.graph
             .neighbors_directed(indx, dir)
             .map(|m| {
-                if let Some(NodeValue::ValueNode(ret)) = self.graph.node_weight(m).copied() {
+                if let Some(NodeValue::ValueNode(ret)) =
+                    self.graph.node_weight(m).map(GraphStruct::into_node)
+                {
                     Ok(ret)
                 } else {
                     Err(GraphError::NonHeterogeneousEdge)
@@ -204,10 +200,11 @@ impl PureCircuitGraph {
         &mut self,
         src_idx: NodeIndex,
         dest_idx: NodeIndex,
-    ) -> Result<(NodeIndex, EdgeIndex), GraphError> {
+        additional_info: G,
+    ) -> Result<(NodeIndex, EdgeIndex, u64), GraphError> {
         match (
-            self.graph.node_weight(src_idx),
-            self.graph.node_weight(dest_idx),
+            self.graph.node_weight(src_idx).map(GraphStruct::into_node),
+            self.graph.node_weight(dest_idx).map(GraphStruct::into_node),
         ) {
             (Some(NodeValue::GateNode { .. }), Some(NodeValue::GateNode { .. }))
             | (Some(NodeValue::ValueNode(_)), Some(NodeValue::ValueNode(_))) => {
@@ -220,6 +217,7 @@ impl PureCircuitGraph {
         let (value, gate_idx) = if matches!(
             self.graph
                 .node_weight(src_idx)
+                .map(GraphStruct::into_node)
                 .ok_or(GraphError::NotExistentNode)?,
             NodeValue::ValueNode(_)
         ) {
@@ -228,20 +226,22 @@ impl PureCircuitGraph {
             self.get_next_node(src_idx, Direction::Outgoing)
         };
 
-        let ret = self.graph.add_edge(src_idx, dest_idx, value);
+        let ret = self
+            .graph
+            .add_edge(src_idx, dest_idx, (value, additional_info));
         self.update_node_status(gate_idx)?;
 
-        Ok((gate_idx, ret))
+        Ok((gate_idx, ret, value))
     }
 
     pub fn remove_edge(
         &mut self,
         src_idx: NodeIndex,
         dest_idx: NodeIndex,
-    ) -> Result<NodeIndex, GraphError> {
+    ) -> Result<(NodeIndex, BoxArray<(u64, G)>), GraphError> {
         match (
-            self.graph.node_weight(src_idx),
-            self.graph.node_weight(dest_idx),
+            self.graph.node_weight(src_idx).map(GraphStruct::into_node),
+            self.graph.node_weight(dest_idx).map(GraphStruct::into_node),
         ) {
             (Some(NodeValue::GateNode { .. }), Some(NodeValue::GateNode { .. }))
             | (Some(NodeValue::ValueNode(_)), Some(NodeValue::ValueNode(_))) => {
@@ -260,13 +260,16 @@ impl PureCircuitGraph {
             return Err(GraphError::NotExistentEdge);
         }
 
-        for e in edges {
-            self.graph.remove_edge(e);
-        }
+        let edges = edges
+            .into_iter()
+            .map(|e| self.graph.remove_edge(e))
+            .collect::<Option<Box<[(u64, G)]>>>()
+            .ok_or(GraphError::NotExistentEdge)?;
 
         let gate_idx = if matches!(
             self.graph
                 .node_weight(src_idx)
+                .map(GraphStruct::into_node)
                 .ok_or(GraphError::NotExistentNode)?,
             NodeValue::ValueNode(_)
         ) {
@@ -277,7 +280,7 @@ impl PureCircuitGraph {
 
         self.update_node_status(gate_idx)?;
 
-        Ok(gate_idx)
+        Ok((gate_idx, edges))
     }
 
     pub fn remove_node(&mut self, node_idx: NodeIndex) -> Result<Box<[NodeIndex]>, GraphError> {
@@ -287,7 +290,7 @@ impl PureCircuitGraph {
             .copied()
             .ok_or(GraphError::NotExistentNode)?;
 
-        let neigh = match weight {
+        let neigh = match weight.into_node() {
             NodeValue::ValueNode(_) => Some(self.get_all_neigh(node_idx)),
             NodeValue::GateNode { .. } => None,
         };
@@ -334,10 +337,10 @@ mod tests {
                 ]
                 , 5..1_000))
             ){
-                let mut pc = PureCircuitGraph::default();
+                let mut pc = PureCircuitGraph::<(), ()>::default();
                 let mut counter = 0;
                 for n in s {
-                    pc.add_node(n);
+                    pc.add_node(n, ());
                     if let NodeValue::<NewNode>::GateNode {..} = n {
                         counter += 1;
                     }
@@ -417,15 +420,15 @@ mod tests {
 
         #[test]
         fn test_simple_arity_incorrect_assignment() -> ARes<()> {
-            let mut pc = PureCircuitGraph::default();
-            let gt_indx = pc.add_node(NodeUnitialised::from_gate(Gate::Not));
-            let val_indx = pc.add_node(NodeUnitialised::from_value(Value::Zero));
-            pc.add_edge(val_indx, gt_indx)?;
-            pc.add_edge(gt_indx, val_indx)?;
+            let mut pc = PureCircuitGraph::<(), ()>::default();
+            let gt_indx = pc.add_node(NodeUnitialised::from_gate(Gate::Not), ());
+            let val_indx = pc.add_node(NodeUnitialised::from_value(Value::Zero), ());
+            pc.add_edge(val_indx, gt_indx, ())?;
+            pc.add_edge(gt_indx, val_indx, ())?;
             let Some(NodeValue::GateNode {
                 gate: _,
                 state_type: status,
-            }) = pc.graph.node_weight(gt_indx).copied()
+            }) = pc.graph.node_weight(gt_indx).map(GraphStruct::into_node)
             else {
                 panic!("Ignore");
             };
@@ -435,15 +438,15 @@ mod tests {
 
         #[test]
         fn test_simple_arity_correct_assignment() -> ARes<()> {
-            let mut pc = PureCircuitGraph::default();
-            let gt_indx = pc.add_node(NodeUnitialised::from_gate(Gate::Not));
-            let val_indx = pc.add_node(NodeUnitialised::from_value(Value::Bot));
-            pc.add_edge(val_indx, gt_indx)?;
-            pc.add_edge(gt_indx, val_indx)?;
+            let mut pc = PureCircuitGraph::<(), ()>::default();
+            let gt_indx = pc.add_node(NodeUnitialised::from_gate(Gate::Not), ());
+            let val_indx = pc.add_node(NodeUnitialised::from_value(Value::Bot), ());
+            pc.add_edge(val_indx, gt_indx, ())?;
+            pc.add_edge(gt_indx, val_indx, ())?;
 
             let Some(NodeValue::GateNode {
                 state_type: status, ..
-            }) = pc.graph.node_weight(gt_indx).copied()
+            }) = pc.graph.node_weight(gt_indx).map(GraphStruct::into_node)
             else {
                 panic!("Ignore");
             };
@@ -455,30 +458,28 @@ mod tests {
         fn test_duplicates() {
             // Prepare
             let mut pc = PureCircuitGraph::default();
-            let gate_idx = pc.add_node(NodeUnitialised::from_gate(Gate::And));
-            let val_idx = pc.add_node(NodeUnitialised::from_value(Value::Bot));
-            let (i1, w1) = pc.add_edge(gate_idx, val_idx).expect("No errors");
-            let w1 = pc.graph.edge_weight(w1).copied().unwrap();
+            let gate_idx = pc.add_node(NodeUnitialised::from_gate(Gate::And), ());
+            let val_idx = pc.add_node(NodeUnitialised::from_value(Value::Bot), ());
+            let (i1, _, w1) = pc.add_edge(gate_idx, val_idx, ()).expect("No errors");
             assert_eq!(gate_idx, i1);
-            let (i2, w2) = pc.add_edge(gate_idx, val_idx).expect("No errors");
+            let (i2, _, w2) = pc.add_edge(gate_idx, val_idx, ()).expect("No errors");
             assert_eq!(gate_idx, i2);
-            let w2 = pc.graph.edge_weight(w2).copied().unwrap();
             assert!(w1 < w2)
         }
 
         proptest! {
             #[test]
             fn check_invalid_edges(s in generate_generic_graph()) {
-                let mut graph = PureCircuitGraph::default();
+                let mut graph = PureCircuitGraph::<(), ()>::default();
                 let (edges, array) = s;
-                let node_indxes = graph.add_nodes(array.iter().cloned()).collect_vec();
+                let node_indxes = graph.add_nodes(array.iter().cloned().map(|x| (x, ()))).collect_vec();
                 for (src, dst) in edges {
                     let flag = match (array[src], array[dst]) {
                         (NodeUnitialised::GateNode { .. }, NodeUnitialised::ValueNode(_))
                         | (NodeUnitialised::ValueNode(_), NodeUnitialised::GateNode { .. }) => true,
                         _ => false,
                     };
-                    let result = graph.add_edge(node_indxes[src], node_indxes[dst]);
+                    let result = graph.add_edge(node_indxes[src], node_indxes[dst], ());
                     prop_assert!(
                         flag == matches!(result, Ok(_))
                     , "Output {:?} {:?}. Edge ({:?}, {:?})", result, flag, node_indxes[src], node_indxes[dst]);
@@ -491,16 +492,16 @@ mod tests {
 
             #[test]
             fn check_bad_nodes(s in generate_heterogeneous_graph()) {
-                let mut pc = PureCircuitGraph::default();
+                let mut pc = PureCircuitGraph::<(), ()>::default();
                 let (edges, vals, gates) = s;
-                let vals_idx = pc.add_nodes(vals.into_iter()).collect_vec();
-                let gates_idx = pc.add_nodes(gates.into_iter()).collect_vec();
+                let vals_idx = pc.add_nodes(vals.into_iter().map(|x| (x, ()))).collect_vec();
+                let gates_idx = pc.add_nodes(gates.into_iter().map(|x| (x, ()))).collect_vec();
                 let mut checks = true;
                 for (dir, src, dest) in edges {
                     if dir {
-                        checks &= pc.add_edge(vals_idx[src], gates_idx[dest]).is_ok();
+                        checks &= pc.add_edge(vals_idx[src], gates_idx[dest], ()).is_ok();
                     } else {
-                        checks &= pc.add_edge(gates_idx[src], vals_idx[dest]).is_ok();
+                        checks &= pc.add_edge(gates_idx[src], vals_idx[dest], ()).is_ok();
                     }
                 }
                 prop_assert!(checks);
@@ -508,23 +509,23 @@ mod tests {
                     let node_weight = pc.graph.node_weight(node_ix);
                     prop_assert!(node_weight.is_some());
                     let node_weight = node_weight.unwrap();
-                    match node_weight {
+                    match node_weight.into_node() {
                         GraphNode::ValueNode(_) => continue,
                         GraphNode::GateNode { gate, state_type: status } => {
-                            let in_neigh = pc.graph.neighbors_directed(node_ix,Direction::Incoming).map(|ind| pc.graph.node_weight(ind).unwrap()).collect_vec();
-                            let out_neigh = pc.graph.neighbors_directed(node_ix,Direction::Outgoing).map(|ind| pc.graph.node_weight(ind).unwrap()).collect_vec();
+                            let in_neigh = pc.graph.neighbors_directed(node_ix,Direction::Incoming).map(|ind| pc.graph.node_weight(ind).unwrap().into_node()).collect_vec();
+                            let out_neigh = pc.graph.neighbors_directed(node_ix,Direction::Outgoing).map(|ind| pc.graph.node_weight(ind).unwrap().into_node()).collect_vec();
                             prop_assert!(in_neigh.iter().all(|f| matches!(f,NodeValue::ValueNode(_))));
                             prop_assert!(out_neigh.iter().all(|f| matches!(f,NodeValue::ValueNode(_))));
                             let in_neigh = in_neigh.into_iter().map(|el| {
                                 let NodeValue::ValueNode(v) = el else { panic!("Should not happen")};
                                 v
-                            }).copied().collect_vec();
+                            }).collect_vec();
                             let out_neigh = out_neigh.into_iter().map(|el| {
                                 let NodeValue::ValueNode(v) = el else { panic!("Should not happen")};
                                 v
-                            }).copied().collect_vec();
+                            }).collect_vec();
                             if (in_neigh.len(),out_neigh.len()) == gate.arity() {
-                                prop_assert_ne!(*status, GateStatus::InvalidArity,
+                                prop_assert_ne!(status, GateStatus::InvalidArity,
                                     "Status received {:?}, for gate {:?} with arity {:?}",
                                     status,
                                     gate,
@@ -532,12 +533,12 @@ mod tests {
                                 );
                                 match gate.check(&in_neigh, &out_neigh) {
                                     Ok(b) => {
-                                        prop_assert!(b == (*status == GateStatus::Valid))
+                                        prop_assert!(b == (status == GateStatus::Valid))
                                     },
                                     Err(_) => prop_assert!(false, "Should not reach errored gate"),
                                 }
                             } else {
-                                prop_assert_eq!(*status, GateStatus::InvalidArity);
+                                prop_assert_eq!(status, GateStatus::InvalidArity);
                             }
                         },
                     }
