@@ -1,27 +1,20 @@
-use std::{fmt::Display, ops::Mul};
+use std::fmt::Display;
 
 use crate::{
     constants::{D_RADIUS, LINE_STROKE},
-    drawing_plugin::GateStatusComponent,
     state_management::{
-        events::{EdgeAdditionEvent, EdgeRemovalEvent, NodeStatusUpdate},
-        mouse_state::EdgeManagementState,
-        node_addition_state::ValueComponent,
-        state_init::PureCircuitResource,
+        events::NodeStatusUpdate, mouse_state::EdgeManagementState,
+        node_addition_state::ValueComponent, state_init::PureCircuitResource,
     },
 };
 use bevy::{
     color::palettes::css::{ORANGE, RED, YELLOW},
     input::common_conditions::input_just_pressed,
-    math::NormedVectorSpace,
     prelude::*,
 };
 use bevy_prototype_lyon::{prelude::ShapeBuilder, prelude::*};
-use petgraph::{graph::Edge, prelude::*};
-use pure_circuit_lib::{
-    EnumCycle,
-    gates::{GraphStruct, NodeValue},
-};
+use petgraph::prelude::*;
+use pure_circuit_lib::{EnumCycle, gates::GraphStruct};
 
 use super::mouse_state::MouseState;
 
