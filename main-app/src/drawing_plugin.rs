@@ -90,7 +90,6 @@ fn spawn_error_circle(status: GateStatus) -> impl Bundle {
         GateStatus::InvalidValues => Color::Srgba(RED_500),
         _ => panic!("Gate status cannot be valid"),
     };
-
     (
         ShapeBuilder::with(&shapes::Circle {
             center: Vec2::splat(0.),

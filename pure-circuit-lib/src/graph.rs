@@ -1,4 +1,9 @@
-use petgraph::{prelude::*, visit::IntoNeighborsDirected};
+use itertools::Itertools;
+use petgraph::{
+    graph::{Edge, EdgesConnecting},
+    prelude::*,
+    visit::IntoNeighborsDirected,
+};
 use strum_macros::Display;
 
 use crate::gates::{GateError, GateStatus, GraphNode, NewNode, NodeUnitialised, NodeValue, Value};
@@ -19,6 +24,7 @@ impl Default for PureCircuitGraph {
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Display)]
 pub enum GraphError {
     NotExistentNode,
+    NotExistentEdge,
     NonHeterogeneousEdge,
     InvalidUpdate,
 }
@@ -30,10 +36,10 @@ impl PureCircuitGraph {
         Self::default()
     }
 
-    pub fn get_edges(&self) -> impl Iterator<Item = (NodeIndex, NodeIndex)> {
+    pub fn get_edges(&self) -> impl Iterator<Item = (NodeIndex, NodeIndex, u64)> {
         self.graph
             .edge_references()
-            .map(|r| (r.source(), r.target()))
+            .map(|r| (r.source(), r.target(), *r.weight()))
     }
 
     pub fn update_node(
@@ -198,7 +204,7 @@ impl PureCircuitGraph {
         &mut self,
         src_idx: NodeIndex,
         dest_idx: NodeIndex,
-    ) -> Result<EdgeIndex, GraphError> {
+    ) -> Result<(NodeIndex, EdgeIndex), GraphError> {
         match (
             self.graph.node_weight(src_idx),
             self.graph.node_weight(dest_idx),
@@ -225,7 +231,72 @@ impl PureCircuitGraph {
         let ret = self.graph.add_edge(src_idx, dest_idx, value);
         self.update_node_status(gate_idx)?;
 
-        Ok(ret)
+        Ok((gate_idx, ret))
+    }
+
+    pub fn remove_edge(
+        &mut self,
+        src_idx: NodeIndex,
+        dest_idx: NodeIndex,
+    ) -> Result<NodeIndex, GraphError> {
+        match (
+            self.graph.node_weight(src_idx),
+            self.graph.node_weight(dest_idx),
+        ) {
+            (Some(NodeValue::GateNode { .. }), Some(NodeValue::GateNode { .. }))
+            | (Some(NodeValue::ValueNode(_)), Some(NodeValue::ValueNode(_))) => {
+                return Err(GraphError::NonHeterogeneousEdge);
+            }
+            (None, _) | (_, None) => return Err(GraphError::NotExistentNode),
+            _ => (),
+        };
+
+        let edges = self
+            .graph
+            .edges_connecting(src_idx, dest_idx)
+            .map(|e| e.id())
+            .collect::<Box<[_]>>();
+        if edges.len() == 0 {
+            return Err(GraphError::NotExistentEdge);
+        }
+
+        for e in edges {
+            self.graph.remove_edge(e);
+        }
+
+        let gate_idx = if matches!(
+            self.graph
+                .node_weight(src_idx)
+                .ok_or(GraphError::NotExistentNode)?,
+            NodeValue::ValueNode(_)
+        ) {
+            dest_idx
+        } else {
+            src_idx
+        };
+
+        self.update_node_status(gate_idx)?;
+
+        Ok(gate_idx)
+    }
+
+    pub fn remove_node(&mut self, node_idx: NodeIndex) -> Result<Box<[NodeIndex]>, GraphError> {
+        let weight = self
+            .graph
+            .node_weight(node_idx)
+            .copied()
+            .ok_or(GraphError::NotExistentNode)?;
+
+        let neigh = match weight {
+            NodeValue::ValueNode(_) => Some(self.get_all_neigh(node_idx)),
+            NodeValue::GateNode { .. } => None,
+        };
+
+        self.graph
+            .remove_node(node_idx)
+            .ok_or(GraphError::NotExistentNode)?;
+
+        Ok(neigh.unwrap_or_default())
     }
 }
 
@@ -386,13 +457,13 @@ mod tests {
             let mut pc = PureCircuitGraph::default();
             let gate_idx = pc.add_node(NodeUnitialised::from_gate(Gate::And));
             let val_idx = pc.add_node(NodeUnitialised::from_value(Value::Bot));
-            let edge1 = pc.add_edge(gate_idx, val_idx);
-            assert!(matches!(edge1, Ok(_)));
-            let w = pc.graph.edge_weight(edge1.unwrap()).copied().unwrap();
-            let edge2 = pc.add_edge(gate_idx, val_idx);
-            assert!(matches!(edge2, Ok(_)));
-            let w2 = pc.graph.edge_weight(edge2.unwrap()).copied().unwrap();
-            assert!(w < w2)
+            let (i1, w1) = pc.add_edge(gate_idx, val_idx).expect("No errors");
+            let w1 = pc.graph.edge_weight(w1).copied().unwrap();
+            assert_eq!(gate_idx, i1);
+            let (i2, w2) = pc.add_edge(gate_idx, val_idx).expect("No errors");
+            assert_eq!(gate_idx, i2);
+            let w2 = pc.graph.edge_weight(w2).copied().unwrap();
+            assert!(w1 < w2)
         }
 
         proptest! {

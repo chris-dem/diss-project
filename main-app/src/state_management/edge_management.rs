@@ -8,7 +8,7 @@ use crate::{
 };
 use bevy::{
     color::palettes::css::{ORANGE, RED},
-    input::common_conditions::{input_just_pressed, input_pressed},
+    input::common_conditions::input_just_pressed,
     prelude::*,
 };
 use petgraph::prelude::*;
@@ -68,7 +68,7 @@ impl Plugin for EdgeManagementPlugin {
                 Update,
                 edge_management_toggle
                     .run_if(in_state(MouseState::Edge))
-                    .run_if(input_pressed(KeyCode::KeyJ)),
+                    .run_if(input_just_pressed(KeyCode::KeyJ)),
             )
             .add_systems(
                 Update,
@@ -140,7 +140,7 @@ fn setup(mut config_store: ResMut<GizmoConfigStore>) {
 }
 
 fn draw_edges(mut gizmos: Gizmos, query: Query<&Transform>, pc_resource: Res<PureCircuitResource>) {
-    for (s, t) in pc_resource.0.get_edges() {
+    for (s, t, w) in pc_resource.0.get_edges() {
         let Some(s) = pc_resource.1.get(&s) else {
             error!("Missing entity of {s:?}");
             continue;
@@ -157,6 +157,7 @@ fn draw_edges(mut gizmos: Gizmos, query: Query<&Transform>, pc_resource: Res<Pur
         let end = end.translation;
         let offset = (end - start).normalize_or_zero() * D_RADIUS;
         gizmos.arrow(start + offset, end - offset, RED);
+        gizmos.
     }
 }
 
@@ -176,6 +177,7 @@ fn on_click(
     trigger: Trigger<Pointer<Click>>,
     query: Query<&ValueComponent>,
     mouse_state: Res<State<EdgeState>>,
+    edge_management_state: Res<State<EdgeManagementState>>,
     mut gate_status_query: Query<&mut GateStatusComponent>,
     mut next_mouse_state: ResMut<NextState<EdgeState>>,
     mut path_builder: ResMut<PathBuilderResource>,
@@ -211,21 +213,23 @@ fn on_click(
                 return;
             }
 
-            // let Some(source) = path_builder.0 else {
-            //     error!("Invalid configuration");
-            //     next_mouse_state.set(mouse_state.toggle_state());
-            //     return;
-            // };
-
-            if let Err(e) = pc_resource.0.add_edge(ind, graph_node.0) {
-                error!("Error adding edge {e:?}");
-                return;
-            };
-
-            let gate_indx = if current_node.is_gate() {
-                graph_node.0
-            } else {
-                ind
+            let gate_indx = match **edge_management_state {
+                EdgeManagementState::AddEdge => match pc_resource.0.add_edge(ind, graph_node.0) {
+                    Ok((node_ind, _)) => node_ind,
+                    Err(e) => {
+                        error!("Error adding edge {e:?}");
+                        return;
+                    }
+                },
+                EdgeManagementState::RemoveEdges => {
+                    match pc_resource.0.remove_edge(ind, graph_node.0) {
+                        Ok(indxes) => indxes,
+                        Err(e) => {
+                            error!("Error adding edge {e:?}");
+                            return;
+                        }
+                    }
+                }
             };
 
             if let (
