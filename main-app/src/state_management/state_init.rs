@@ -1,7 +1,11 @@
-use crate::{misc::cycle_enum_state, state_management::{mouse_state::EdgeManagementState, node_addition_state::ValueState}};
-use bevy::{
-    input::common_conditions::input_just_pressed, platform::collections::HashMap, prelude::*,
+use crate::{
+    misc::cycle_enum_state,
+    state_management::{
+        events::EventManagerPlugin, mouse_state::EdgeManagementState,
+        node_addition_state::ValueState,
+    },
 };
+use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 use pure_circuit_lib::{
     gates::{Gate, Value},
     graph::PureCircuitGraph,
@@ -15,14 +19,23 @@ use super::{
     node_addition_state::GateMode,
 };
 
-#[derive(Debug, Clone, Resource, Default)]
-pub struct PureCircuitResource(pub PureCircuitGraph, pub HashMap<NodeIndex, Entity>);
+#[derive(Debug, Clone, Resource)]
+pub struct PureCircuitResource(pub PureCircuitGraph<Entity, Entity>);
+
+impl Default for PureCircuitResource {
+    fn default() -> Self {
+        PureCircuitResource(PureCircuitGraph {
+            graph: DiGraph::new(),
+        })
+    }
+}
 
 pub struct StateManagementPlugin;
 
 impl Plugin for StateManagementPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(EdgeManagementPlugin)
+            .add_plugins(EventManagerPlugin)
             .init_state::<MouseState>()
             .init_state::<EdgeManagementState>()
             .init_resource::<PureCircuitResource>()

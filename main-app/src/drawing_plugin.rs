@@ -5,11 +5,13 @@ use bevy::{
     },
     ecs::relationship::RelatedSpawnerCommands,
     input::common_conditions::{input_just_pressed, input_pressed},
+    log::tracing::event,
     prelude::*,
 };
 use bevy_prototype_lyon::prelude::*;
 use itertools::Itertools;
-use pure_circuit_lib::gates::{Gate, Value};
+use petgraph::{graph::Node, prelude::*};
+use pure_circuit_lib::gates::{Gate, GraphStruct, Value};
 use pure_circuit_lib::{
     EnumCycle,
     gates::{GateStatus, GraphNode, NewNode, NodeUnitialised, NodeValue},
@@ -19,6 +21,7 @@ use crate::{
     assets::{ASSET_DICT, generate_bundle_from_asset},
     constants::D_RADIUS,
     state_management::{
+        events::NodeStatusUpdate,
         mouse_state::{MousePositions, MouseState},
         node_addition_state::{GateMode, ValueComponent, ValueState},
         state_init::PureCircuitResource,
@@ -132,7 +135,6 @@ fn click_draw(
         GateMode::Gate => NodeUnitialised::from_gate(gate_state.0),
         GateMode::Value => NodeUnitialised::from_value(value_state.0),
     };
-    let index = pc_resource.0.add_node(val);
 
     let mut entity = commands.spawn((
         ShapeBuilder::with(&shapes::Circle {
@@ -141,26 +143,30 @@ fn click_draw(
         })
         .fill(gate_mode.get_col())
         .build(),
-        ValueComponent(index),
         Pickable::default(),
         Transform {
             translation: pos.extend(10.),
             ..default()
         },
     ));
-    pc_resource.1.insert(index, entity.id());
+    let index = pc_resource.0.add_node(val, entity.id());
+    entity.insert(ValueComponent(index));
     entity.with_children(|parent| value_spawner(parent, val, asset_server));
 
     if *gate_mode.get() == GateMode::Gate {
         let Some(NodeValue::GateNode {
             gate: _,
             state_type,
-        }) = pc_resource.0.graph.node_weight(index)
+        }) = pc_resource
+            .0
+            .graph
+            .node_weight(index)
+            .map(GraphStruct::into_node)
         else {
             error!("Node should exist");
             return;
         };
-        entity.insert(GateStatusComponent(*state_type));
+        entity.insert(GateStatusComponent(state_type));
     }
 
     entity
@@ -173,9 +179,9 @@ fn click_draw(
 fn on_click(
     trigger: Trigger<Pointer<Click>>,
     mut query: Query<(Entity, &mut ValueComponent), With<ValueComponent>>,
-    mut query_gate: Query<&mut GateStatusComponent>,
     mut commands: Commands,
     mut pc_resource: ResMut<PureCircuitResource>,
+    mut event_writer: EventWriter<NodeStatusUpdate>,
     mouse_state: Res<State<MouseState>>,
     asset_server: Res<AssetServer>,
 ) {
@@ -189,12 +195,17 @@ fn on_click(
     };
     commands.entity(entity).despawn_related::<Children>();
 
-    let node = match pc_resource.0.graph.node_weight(current_value.0).copied() {
+    let node = match pc_resource
+        .0
+        .graph
+        .node_weight(current_value.0)
+        .map(GraphStruct::into_node)
+    {
         Some(GraphNode::GateNode { gate, .. }) => NodeUnitialised::GateNode {
             gate: gate.toggle(),
             state_type: NewNode,
         },
-        Some(GraphNode::ValueNode(b)) => dbg!(NodeUnitialised::ValueNode(b.toggle())),
+        Some(GraphNode::ValueNode(b)) => NodeUnitialised::ValueNode(b.toggle()),
         _ => {
             error!("Node does not exist");
             return;
@@ -211,14 +222,8 @@ fn on_click(
     commands
         .entity(entity)
         .with_children(|parent| value_spawner(parent, node, asset_server));
-    for (indx, status) in gates {
-        if let Some(mut v) = pc_resource
-            .1
-            .get(&indx)
-            .and_then(|e| query_gate.get_mut(*e).ok())
-        {
-            v.0 = status;
-        }
+    for index in gates {
+        event_writer.write(NodeStatusUpdate(index));
     }
 }
 
@@ -287,6 +292,7 @@ fn on_hover_del(
     query_indx: Query<&ValueComponent>,
     mut hovered_node: ResMut<HoveredNode>,
     mut pc_resource: ResMut<PureCircuitResource>,
+    mut event_writer: EventWriter<NodeStatusUpdate>,
     mut commands: Commands,
 ) {
     let Some(target) = hovered_node.0.take() else {
@@ -299,8 +305,14 @@ fn on_hover_del(
     };
     if key.just_pressed(KeyCode::KeyD) {
         commands.entity(target).despawn();
-        pc_resource.1.remove(indx);
-        pc_resource.0.graph.remove_node(*indx);
+        match pc_resource.0.remove_node(*indx) {
+            Err(e) => error!("Error {e} for when deleting node"),
+            Ok(ind) => {
+                for n in ind {
+                    event_writer.write(NodeStatusUpdate(n));
+                }
+            }
+        };
     }
 }
 
