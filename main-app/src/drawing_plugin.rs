@@ -5,12 +5,9 @@ use bevy::{
     },
     ecs::relationship::RelatedSpawnerCommands,
     input::common_conditions::{input_just_pressed, input_pressed},
-    log::tracing::event,
     prelude::*,
 };
 use bevy_prototype_lyon::prelude::*;
-use itertools::Itertools;
-use petgraph::{graph::Node, prelude::*};
 use pure_circuit_lib::gates::{Gate, GraphStruct, Value};
 use pure_circuit_lib::{
     EnumCycle,

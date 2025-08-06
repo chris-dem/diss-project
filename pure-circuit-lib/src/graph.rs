@@ -1,5 +1,4 @@
-use itertools::Itertools;
-use petgraph::{graph::Edge, prelude::*};
+use petgraph::prelude::*;
 use std::fmt::Debug;
 use strum_macros::Display;
 
@@ -95,7 +94,7 @@ impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
                     gate: g,
                     state_type: GateStatus::InvalidArity,
                 },
-                additional_info: additional_info,
+                additional_info,
             }),
             NodeValue::ValueNode(v) => self.graph.add_node(GraphStruct::<T>::new(
                 NodeValue::ValueNode(v),
@@ -151,7 +150,7 @@ impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
             }
         };
         Ok(NodeValue::<GateStatus>::GateNode {
-            gate: gate,
+            gate,
             state_type: *state_type,
         })
     }
@@ -481,10 +480,10 @@ mod tests {
                     };
                     let result = graph.add_edge(node_indxes[src], node_indxes[dst], ());
                     prop_assert!(
-                        flag == matches!(result, Ok(_))
+                        flag == result.is_ok()
                     , "Output {:?} {:?}. Edge ({:?}, {:?})", result, flag, node_indxes[src], node_indxes[dst]);
                     prop_assert!(
-                        !flag == matches!(result, Err(GraphError::NonHeterogeneousEdge))
+                        flag != matches!(result, Err(GraphError::NonHeterogeneousEdge))
                     , "Output {:?} {:?}. Edge ({:?}, {:?})", result, flag, node_indxes[src], node_indxes[dst]);
                     graph.graph.edges_connecting(node_indxes[src], node_indxes[dst]).count();
                 }

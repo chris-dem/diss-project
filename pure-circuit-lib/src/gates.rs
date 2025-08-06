@@ -1,7 +1,6 @@
 use enum_derived::Rand;
 use macro_export::EnumCycle;
 use misc_lib::EnumCycle;
-use petgraph::Graph;
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use strum_macros::EnumIter;
@@ -14,9 +13,9 @@ pub enum Value {
     One,
 }
 
-impl Into<usize> for Value {
-    fn into(self) -> usize {
-        ((self as usize) + 1) % 3
+impl From<Value> for usize {
+    fn from(val: Value) -> Self {
+        ((val as usize) + 1) % 3
     }
 }
 
@@ -57,7 +56,7 @@ impl PartialOrd for VoltageOrdering {
 
 impl Ord for VoltageOrdering {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.partial_cmp(&other)
+        self.partial_cmp(other)
             .expect("Should be `Some` for all instances")
     }
 }
@@ -226,7 +225,7 @@ impl NodeUnitialised {
 
     pub fn from_gate(gate: Gate) -> Self {
         Self::GateNode {
-            gate: gate,
+            gate,
             state_type: NewNode,
         }
     }

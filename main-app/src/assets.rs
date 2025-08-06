@@ -45,7 +45,7 @@ const ZERO_PATHS: StringPaths = [
 ];
 
 const ONE_TRANS: AffinePaths = [
-	Some([0.47345101, 0., 0., 0.47345101, 0.49002179, 9.8392589]),
+	Some([0.47345101, 0., 0., 0.47345101, 0.490_021_8, 9.839_259]),
 	None,
 	None,
 ];
