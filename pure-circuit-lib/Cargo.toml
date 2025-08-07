@@ -16,3 +16,5 @@ strum_macros = "0.27.1"
 log = "0.4.27"
 anyhow = "1.0.98"
 petgraph.workspace = true
+genetic_algorithm = "0.20.5"
+env_logger = "0.11.8"
