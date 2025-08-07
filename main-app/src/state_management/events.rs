@@ -9,24 +9,17 @@ use crate::{
 #[derive(Debug, Clone, Event)]
 pub struct NodeStatusUpdate(pub NodeIndex);
 
-#[derive(Debug, Clone, Event)]
-pub struct EdgeAdditionEvent(pub EdgeIndex);
-
-#[derive(Debug, Clone, Event)]
-pub struct EdgeRemovalEvent(pub EdgeIndex);
-
 pub struct EventManagerPlugin;
 
 impl Plugin for EventManagerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<EdgeRemovalEvent>()
-            .add_event::<EdgeAdditionEvent>()
+        app.add_systems(Update, manage_node_update_status)
             .add_event::<NodeStatusUpdate>();
     }
 }
 
 pub fn manage_node_update_status(
-    pc_resource: PureCircuitResource,
+    pc_resource: Res<PureCircuitResource>,
     mut event_reader: EventReader<NodeStatusUpdate>,
     mut query_status: Query<&mut GateStatusComponent>,
 ) {

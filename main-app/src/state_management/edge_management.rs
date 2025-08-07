@@ -170,22 +170,6 @@ fn add_edge_detection(
     observer_resource.0 = Some(commands.spawn(observer).id());
 }
 
-#[derive(Debug, Clone, Component)]
-#[relationship(relationship_target = EdgeSrcRelType)]
-pub struct EdgeSrcRelation(Entity);
-
-#[derive(Debug, Clone, Component)]
-#[relationship_target(relationship = EdgeSrcRelation, linked_spawn)]
-pub struct EdgeSrcRelType(Entity);
-
-#[derive(Debug, Clone, Component)]
-#[relationship(relationship_target = EdgeDestRelType)]
-pub struct EdgeDestRelation(Entity);
-
-#[derive(Debug, Clone, Component)]
-#[relationship_target(relationship = EdgeDestRelation, linked_spawn)]
-pub struct EdgeDestRelType(Entity);
-
 fn spawn_edge(src: Vec2, dest: Vec2) -> Shape {
     let dir = (dest - src).normalize();
     let norm = Vec2 {
@@ -221,28 +205,31 @@ pub struct EdgeLabel;
 
 fn on_transition(
     query_moved_circles: Query<
-        (Entity, &Transform),
+        (&Transform, &ValueComponent),
         (Changed<Transform>, With<ValueComponent>, Without<EdgeLabel>),
     >,
+    pc_resource: Res<PureCircuitResource>,
     query_circles: Query<&Transform, (With<ValueComponent>, Without<EdgeLabel>)>,
-    query_src_ans: Query<&EdgeSrcRelation>,
-    query_src_des: Query<&EdgeSrcRelType>,
-    query_dst_ans: Query<&EdgeDestRelation>,
-    query_dst_des: Query<&EdgeDestRelType>,
     mut query_text: Query<&mut Transform, With<EdgeLabel>>,
     mut query_edge: Query<(&mut Shape, &Children)>,
 ) {
-    for (ent, trans) in query_moved_circles {
-        for edge_ent in query_src_des.iter_descendants(ent) {
+    for (trans, ValueComponent(ind)) in query_moved_circles {
+        for edge_ref in pc_resource
+            .0
+            .graph
+            .edges_directed(*ind, Direction::Outgoing)
+        {
+            let (_, edge_ent) = edge_ref.weight();
             let src_trans = *trans;
-            let Ok((mut edge, child)) = query_edge.get_mut(edge_ent) else {
+            let Ok((mut edge, child)) = query_edge.get_mut(*edge_ent) else {
                 error!("Edge is missing");
                 continue;
             };
-            let Some(dest_trans) = query_dst_ans
-                .iter_ancestors(edge_ent)
-                .next()
-                .and_then(|e| query_circles.get(e).ok())
+            let Some(dest_trans) = pc_resource
+                .0
+                .graph
+                .node_weight(edge_ref.target())
+                .and_then(|e| query_circles.get(e.additional_info).ok())
             else {
                 error!("Destinaton node is missing");
                 continue;
@@ -259,16 +246,22 @@ fn on_transition(
                     (src_trans.translation.xy() + dir.normalize() * dir.length() / 2.).extend(10.);
             }
         }
-        for edge_ent in query_dst_des.iter_descendants(ent) {
+        for edge_ref in pc_resource
+            .0
+            .graph
+            .edges_directed(*ind, Direction::Incoming)
+        {
+            let (_, edge_ent) = edge_ref.weight();
             let dest_trans = *trans;
-            let Ok((mut edge, child)) = query_edge.get_mut(edge_ent) else {
+            let Ok((mut edge, child)) = query_edge.get_mut(*edge_ent) else {
                 error!("Edge is missing");
                 continue;
             };
-            let Some(src_trans) = query_src_ans
-                .iter_ancestors(edge_ent)
-                .next()
-                .and_then(|e| query_circles.get(e).ok())
+            let Some(src_trans) = pc_resource
+                .0
+                .graph
+                .node_weight(edge_ref.source())
+                .and_then(|e| query_circles.get(e.additional_info).ok())
             else {
                 error!("Destinaton node is missing");
                 continue;
@@ -360,13 +353,6 @@ fn on_click(
                     let edge_entity = commands.spawn(spawn_edge(src_trans, dest_trans)).id();
                     match pc_resource.0.add_edge(ind, graph_node.0, edge_entity) {
                         Ok((node_ind, _, val)) => {
-                            commands
-                                .entity(src_ent)
-                                .add_one_related::<EdgeSrcRelation>(edge_entity);
-                            commands
-                                .entity(dest_ent)
-                                .add_one_related::<EdgeDestRelation>(edge_entity);
-
                             commands.entity(edge_entity).with_children(|parent| {
                                 parent.spawn(add_text(src_trans, dest_trans, val, text_font));
                             });
