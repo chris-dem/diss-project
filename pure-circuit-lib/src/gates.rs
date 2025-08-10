@@ -146,7 +146,12 @@ impl Gate {
         } else {
             match self {
                 Self::Purify => Ok(match in_vals[0] {
-                    Value::Bot => out_vals.contains(&Value::One) || out_vals.contains(&Value::Zero),
+                    Value::Bot => [
+                        (Value::Zero, Value::Bot),
+                        (Value::Bot, Value::One),
+                        (Value::Zero, Value::One),
+                    ]
+                    .contains(&(out_vals[0], out_vals[1])),
                     b => out_vals == [b, b],
                 }),
                 b if out_vals.len() == 1 => b.apply(in_vals).map(|val| val == out_vals[0]),
