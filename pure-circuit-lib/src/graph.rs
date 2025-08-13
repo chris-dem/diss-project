@@ -9,7 +9,7 @@ use crate::gates::{
 pub type BoxArray<T> = Box<[T]>;
 
 #[derive(Debug, Clone)]
-pub struct PureCircuitGraph<T, G> {
+pub struct PureCircuitGraph<T = (), G = ()> {
     pub graph: DiGraph<GraphStruct<T>, (u64, G)>,
 }
 
@@ -30,6 +30,15 @@ pub enum GraphError {
 }
 
 impl std::error::Error for GraphError {}
+
+impl<T, G> PureCircuitGraph<T, G> {
+    pub fn count_values(&self) -> usize {
+        self.graph
+            .node_weights()
+            .filter(|i| !i.node.is_gate())
+            .count()
+    }
+}
 
 impl<T: Debug + Default, G: Debug> PureCircuitGraph<T, G> {
     pub fn new() -> Self {

@@ -8,6 +8,8 @@ use bevy::{
     prelude::*,
 };
 use bevy_prototype_lyon::prelude::*;
+use itertools::Itertools;
+use petgraph::Direction;
 use pure_circuit_lib::gates::{Gate, GraphStruct, Value};
 use pure_circuit_lib::{
     EnumCycle,
@@ -18,7 +20,7 @@ use crate::{
     assets::{ASSET_DICT, generate_bundle_from_asset},
     constants::D_RADIUS,
     state_management::{
-        events::NodeStatusUpdate,
+        events::{NodeStatusUpdate, NodeUpdate},
         mouse_state::{MousePositions, MouseState},
         node_addition_state::{GateMode, ValueComponent, ValueState},
         state_init::PureCircuitResource,
@@ -121,8 +123,8 @@ fn click_draw(
     gate_mode: Res<State<GateMode>>,
     value_state: Res<State<ValueState<Value>>>,
     gate_state: Res<State<ValueState<Gate>>>,
-    asset_server: Res<AssetServer>,
     mut pc_resource: ResMut<PureCircuitResource>,
+    mut event_writer_status: EventWriter<NodeUpdate>,
     mut commands: Commands,
 ) {
     let Some(pos) = mouse_resource.0 else {
@@ -148,7 +150,8 @@ fn click_draw(
     ));
     let index = pc_resource.0.add_node(val, entity.id());
     entity.insert(ValueComponent(index));
-    entity.with_children(|parent| value_spawner(parent, val, asset_server));
+    event_writer_status.write(NodeUpdate(index));
+    // entity.with_children(|parent| value_spawner(parent, val, &asset_server));
 
     if *gate_mode.get() == GateMode::Gate {
         let Some(NodeValue::GateNode {
@@ -179,8 +182,8 @@ fn on_click(
     mut commands: Commands,
     mut pc_resource: ResMut<PureCircuitResource>,
     mut event_writer: EventWriter<NodeStatusUpdate>,
+    mut event_writer_status: EventWriter<NodeUpdate>,
     mouse_state: Res<State<MouseState>>,
-    asset_server: Res<AssetServer>,
 ) {
     if *mouse_state.get() == MouseState::Edge {
         return;
@@ -216,9 +219,11 @@ fn on_click(
             return;
         }
     };
-    commands
-        .entity(entity)
-        .with_children(|parent| value_spawner(parent, node, asset_server));
+
+    event_writer_status.write(NodeUpdate(current_value.0));
+    // commands
+    //     .entity(entity)
+    //     .with_children(|parent| value_spawner(parent, node, asset_server));
     for index in gates {
         event_writer.write(NodeStatusUpdate(index));
     }
@@ -227,10 +232,10 @@ fn on_click(
 #[derive(Debug, Clone, Resource, Default, PartialEq, Eq)]
 struct HoveredNode(Option<Entity>);
 
-fn value_spawner(
+pub(crate) fn value_spawner(
     parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
     value: NodeUnitialised,
-    asset_server: Res<AssetServer>,
+    asset_server: &AssetServer,
 ) {
     let font = asset_server.load("fonts/FiraSans-Bold.ttf");
     let text_font = TextFont {
@@ -302,9 +307,24 @@ fn on_hover_del(
     };
     if key.just_pressed(KeyCode::KeyD) {
         commands.entity(target).despawn();
+        let edges = pc_resource
+            .0
+            .graph
+            .edges_directed(*indx, Direction::Incoming)
+            .chain(
+                pc_resource
+                    .0
+                    .graph
+                    .edges_directed(*indx, Direction::Outgoing),
+            )
+            .map(|e| e.weight().1)
+            .collect_vec();
         match pc_resource.0.remove_node(*indx) {
             Err(e) => error!("Error {e} for when deleting node"),
             Ok(ind) => {
+                for e in edges {
+                    commands.entity(e).despawn();
+                }
                 for n in ind {
                     event_writer.write(NodeStatusUpdate(n));
                 }

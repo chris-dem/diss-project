@@ -219,9 +219,20 @@ impl<T> GraphStruct<T> {
     }
 }
 
-// impl Copy for GraphStruct<T> {
-
-// }
+impl GraphNode {
+    pub fn to_new(&self) -> NodeUnitialised {
+        match self {
+            Self::ValueNode(v) => NodeUnitialised::ValueNode(*v),
+            Self::GateNode {
+                gate,
+                state_type: _,
+            } => NodeUnitialised::GateNode {
+                gate: *gate,
+                state_type: NewNode,
+            },
+        }
+    }
+}
 
 impl NodeUnitialised {
     pub fn from_value(value: Value) -> Self {

@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
+mod algo_execution;
 mod camera_plugin;
 mod constants;
 mod drawing_plugin;
@@ -14,6 +15,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(MeshPickingPlugin)
         .add_plugins(ShapePlugin)
+        .add_plugins(algo_execution::plugin::AlgoPlugin)
         .add_plugins(ui_plugin::UiPlugin)
         .add_plugins(state_management::state_init::StateManagementPlugin)
         .add_plugins(drawing_plugin::DrawingPlugin)
