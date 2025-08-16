@@ -76,7 +76,7 @@ fn highlight_error_values(
         match status_component.0 {
             GateStatus::Valid => (),
             status => {
-                info!("Adding error circles{status_component:?}");
+                info!("Adding error circles {status_component:?}");
                 commands.entity(ent).with_child(spawn_error_circle(status));
             }
         }
@@ -178,8 +178,7 @@ fn click_draw(
 
 fn on_click(
     trigger: Trigger<Pointer<Click>>,
-    mut query: Query<(Entity, &mut ValueComponent), With<ValueComponent>>,
-    mut commands: Commands,
+    mut query: Query<&mut ValueComponent, With<ValueComponent>>,
     mut pc_resource: ResMut<PureCircuitResource>,
     mut event_writer: EventWriter<NodeStatusUpdate>,
     mut event_writer_status: EventWriter<NodeUpdate>,
@@ -189,11 +188,10 @@ fn on_click(
         return;
     }
 
-    let Ok((entity, ref mut current_value)) = query.get_mut(trigger.target) else {
+    let Ok(ref mut current_value) = query.get_mut(trigger.target) else {
         warn!("Element not found");
         return;
     };
-    commands.entity(entity).despawn_related::<Children>();
 
     let node = match pc_resource
         .0
@@ -221,12 +219,8 @@ fn on_click(
     };
 
     event_writer_status.write(NodeUpdate(current_value.0));
-    // commands
-    //     .entity(entity)
-    //     .with_children(|parent| value_spawner(parent, node, asset_server));
-    for index in gates {
-        event_writer.write(NodeStatusUpdate(index));
-    }
+
+    event_writer.write_batch(gates.into_iter().map(NodeStatusUpdate));
 }
 
 #[derive(Debug, Clone, Resource, Default, PartialEq, Eq)]

@@ -1,4 +1,4 @@
-use petgraph::prelude::*;
+use petgraph::{prelude::*, stable_graph::StableDiGraph, visit::IntoEdgeReferences};
 use std::fmt::Debug;
 use strum_macros::Display;
 
@@ -10,7 +10,7 @@ pub type BoxArray<T> = Box<[T]>;
 
 #[derive(Debug, Clone)]
 pub struct PureCircuitGraph<T = (), G = ()> {
-    pub graph: DiGraph<GraphStruct<T>, (u64, G)>,
+    pub graph: StableDiGraph<GraphStruct<T>, (u64, G)>,
 }
 
 impl<T: Default + Debug, G: Debug> Default for PureCircuitGraph<T, G> {
@@ -46,7 +46,7 @@ impl<T: Debug + Default, G: Debug> PureCircuitGraph<T, G> {
     }
 }
 
-impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
+impl<T: Copy, G: Copy> PureCircuitGraph<T, G> {
     pub fn get_edges(&self) -> impl Iterator<Item = (NodeIndex, NodeIndex, (u64, G))> {
         self.graph
             .edge_references()
@@ -197,13 +197,6 @@ impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
             .collect::<Result<_, _>>()
     }
 
-    pub fn get_all_neigh(&self, indx: NodeIndex) -> Box<[NodeIndex]> {
-        self.graph
-            .neighbors_directed(indx, Direction::Incoming)
-            .chain(self.graph.neighbors_directed(indx, Direction::Outgoing))
-            .collect::<Box<[_]>>()
-    }
-
     pub fn add_edge(
         &mut self,
         src_idx: NodeIndex,
@@ -308,6 +301,15 @@ impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
             .ok_or(GraphError::NotExistentNode)?;
 
         Ok(neigh.unwrap_or_default())
+    }
+}
+
+impl<T, G> PureCircuitGraph<T, G> {
+    pub fn get_all_neigh(&self, indx: NodeIndex) -> Box<[NodeIndex]> {
+        self.graph
+            .neighbors_directed(indx, Direction::Incoming)
+            .chain(self.graph.neighbors_directed(indx, Direction::Outgoing))
+            .collect::<Box<[_]>>()
     }
 }
 

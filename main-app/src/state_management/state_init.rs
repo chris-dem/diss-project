@@ -25,7 +25,7 @@ pub struct PureCircuitResource(pub PureCircuitGraph<Entity, Entity>);
 impl Default for PureCircuitResource {
     fn default() -> Self {
         PureCircuitResource(PureCircuitGraph {
-            graph: DiGraph::new(),
+            graph: StableDiGraph::new(),
         })
     }
 }

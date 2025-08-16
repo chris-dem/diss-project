@@ -7,12 +7,12 @@ use itertools::{EitherOrBoth, Itertools};
 use petgraph::{
     prelude::*,
     unionfind::UnionFind,
-    visit::{EdgeRef, NodeIndexable},
+    visit::{EdgeRef, IntoEdgeReferences, NodeIndexable},
 };
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-const MAX_DEGREE: usize = 2;
+pub const MAX_DEGREE: usize = 2;
 type Inner = (
     Gate,
     [Option<usize>; MAX_DEGREE],
@@ -55,17 +55,17 @@ impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
         Some(())
     }
 
-    fn get_conn_components(&self) -> Vec<usize> {
-        let mut node_sets = UnionFind::new(self.graph.node_bound());
-        for edge in self.graph.edge_references() {
-            let (a, b) = (edge.source(), edge.target());
+    // fn get_conn_components(&self) -> Vec<usize> {
+    //     let mut node_sets = UnionFind::new(self.graph.node_bound());
+    //     for edge in self.graph.edge_references() {
+    //         let (a, b) = (edge.source(), edge.target());
 
-            // union the two nodes of the edge
-            node_sets.union(self.graph.to_index(a), self.graph.to_index(b));
-        }
+    //         // union the two nodes of the edge
+    //         node_sets.union(self.graph.to_index(a), self.graph.to_index(b));
+    //     }
 
-        node_sets.into_labeling()
-    }
+    //     node_sets.into_labeling()
+    // }
 
     pub fn to_fitness_function(&self) -> Option<FitnessPureCircuit> {
         let map = self
@@ -141,7 +141,9 @@ impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
 }
 
 impl FitnessPureCircuit {
+    // TODO FIX
     pub fn evaluate(&self, inputs: &[Value]) -> Option<usize> {
+        todo!("Not good enough since ordering is maybe lost. Verify");
         let mut errors = 0usize;
         let t = inputs;
         for (g, ins, outs) in self.0.iter().copied() {

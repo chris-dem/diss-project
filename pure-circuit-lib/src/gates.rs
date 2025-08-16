@@ -25,6 +25,16 @@ pub struct InformationOrdering(pub Value);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Rand, Default, Hash)]
 pub struct VoltageOrdering(pub Value);
 
+impl Into<u8> for  VoltageOrdering {
+     fn into(self) -> u8 {
+            match self.0 {
+            Value::Zero => 0,
+            Value::Bot => 1,
+            Value::One => 2,
+         }
+     }
+}
+
 impl PartialOrd for InformationOrdering {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         match (self.0, other.0) {
@@ -69,7 +79,7 @@ pub enum ConversionError {
 }
 
 impl Value {
-    fn inverse(self) -> Self {
+    pub fn inverse(self) -> Self {
         match self {
             Self::One => Self::Zero,
             Self::Zero => Self::One,
@@ -118,7 +128,7 @@ impl Gate {
         in_vals.len() == ins && out_vals.len() == outs
     }
 
-    fn apply(self, in_vals: &[Value]) -> Result<Value, GateError> {
+    pub(crate) fn apply(self, in_vals: &[Value]) -> Result<Value, GateError> {
         if in_vals.len() != self.arity().0 && self.arity().1 > 1 {
             return Err(GateError::ArityError);
         }
@@ -369,6 +379,8 @@ mod tests {
     }
 
     mod binary_gates {
+        use mockall::predicate::str::contains;
+
         #[allow(unused_imports)]
         use super::*;
 
@@ -413,17 +425,32 @@ mod tests {
             for (u, v, w) in data_generator_bin() {
                 let res = Gate::Purify.check(&[u], &[v, w]);
                 assert!(res.is_ok());
-                let cp1 = Gate::Copy.check(&[u], &[v]).unwrap();
-                let cp2 = Gate::Copy.check(&[u], &[w]).unwrap();
-                assert_eq!(
-                    res,
-                    Ok((u != Value::Bot && cp1 && cp2)
-                        || (u == Value::Bot && ((v != Value::Bot) || (w != Value::Bot)))),
-                    "Value in [{:?}] Value out [{:?}, {:?}]",
-                    u,
-                    v,
-                    w
-                );
+                if u == Value::Bot {
+                    assert_eq!(
+                        res,
+                        Ok([
+                            (Value::Bot, Value::One),
+                            (Value::Zero, Value::One),
+                            (Value::Zero, Value::Bot),
+                        ]
+                        .contains(&(v, w))),
+                        "Value in [{:?}] Value out [{:?}, {:?}]",
+                        u,
+                        v,
+                        w
+                    )
+                } else {
+                    let cp1 = Gate::Copy.check(&[u], &[v]).unwrap();
+                    let cp2 = Gate::Copy.check(&[u], &[w]).unwrap();
+                    assert_eq!(
+                        res,
+                        Ok(cp1 && cp2),
+                        "Value in [{:?}] Value out [{:?}, {:?}]",
+                        u,
+                        v,
+                        w
+                    )
+                };
             }
         }
     }

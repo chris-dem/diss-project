@@ -1,10 +1,11 @@
 use bevy::prelude::*;
+use itertools::Itertools;
 use petgraph::prelude::*;
-use pure_circuit_lib::gates::{GraphStruct, NewNode, NodeValue};
+use pure_circuit_lib::gates::{GraphStruct, NodeValue};
 
 use crate::{
-    drawing_plugin::{GateStatusComponent, value_spawner},
-    state_management::state_init::PureCircuitResource,
+    drawing_plugin::{ErrorCircle, GateStatusComponent, value_spawner},
+    state_management::{node_addition_state::ValueComponent, state_init::PureCircuitResource},
 };
 
 #[derive(Debug, Clone, Event)]
@@ -49,6 +50,8 @@ pub fn manage_node_update_status(
 pub fn manage_node_update(
     pc_resource: Res<PureCircuitResource>,
     mut event_reader: EventReader<NodeUpdate>,
+    mut query_child: Query<&Children, With<ValueComponent>>,
+    mut query: Query<(), Without<ErrorCircle>>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
@@ -57,9 +60,27 @@ pub fn manage_node_update(
             node,
             additional_info,
         } = pc_resource.0.graph[*ind];
-        let mut ent = commands.entity(additional_info);
 
-        ent.despawn_related::<Children>();
-        ent.with_children(|builder| value_spawner(builder, node.to_new(), &asset_server));
+        match node {
+            NodeValue::ValueNode(_) => {
+                commands
+                    .entity(additional_info)
+                    .despawn_related::<Children>();
+            }
+            _ => {
+                if let Ok(children) = query_child.get(additional_info) {
+                    for c in children {
+                        if query.get(*c).is_ok() {
+                            commands.entity(*c).despawn();
+                        }
+                    }
+                } else {
+                    error!("Could not find children");
+                }
+            }
+        };
+        commands
+            .entity(additional_info)
+            .with_children(|builder| value_spawner(builder, node.to_new(), &asset_server));
     }
 }
