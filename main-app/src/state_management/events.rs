@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use itertools::Itertools;
 use petgraph::prelude::*;
 use pure_circuit_lib::gates::{GraphStruct, NodeValue};
 
@@ -16,11 +15,24 @@ pub struct NodeUpdate(pub NodeIndex);
 
 pub struct EventManagerPlugin;
 
+#[derive(Debug, Clone, Event)]
+pub struct ButtonEvoEvent;
+
+#[derive(Debug, Clone, Event)]
+pub struct ButtonHillEvent;
+
+#[derive(Debug, Clone, Event)]
+pub struct BacktrackEvent;
+
 impl Plugin for EventManagerPlugin {
+
     fn build(&self, app: &mut App) {
         app.add_systems(Update, manage_node_update_status)
             .add_systems(Update, manage_node_update)
             .add_event::<NodeUpdate>()
+            .add_event::<ButtonEvoEvent>()
+            .add_event::<ButtonHillEvent>()
+            .add_event::<BacktrackEvent>()
             .add_event::<NodeStatusUpdate>();
     }
 }
@@ -50,8 +62,8 @@ pub fn manage_node_update_status(
 pub fn manage_node_update(
     pc_resource: Res<PureCircuitResource>,
     mut event_reader: EventReader<NodeUpdate>,
-    mut query_child: Query<&Children, With<ValueComponent>>,
-    mut query: Query<(), Without<ErrorCircle>>,
+    query_child: Query<&Children, With<ValueComponent>>,
+    query: Query<(), Without<ErrorCircle>>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
@@ -84,3 +96,5 @@ pub fn manage_node_update(
             .with_children(|builder| value_spawner(builder, node.to_new(), &asset_server));
     }
 }
+
+

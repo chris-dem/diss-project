@@ -1,3 +1,5 @@
+use crate::algo_execution::back::{SolutionIndex, SolutionSet};
+use crate::state_management::events::{BacktrackEvent, ButtonEvoEvent, ButtonHillEvent};
 use crate::state_management::mouse_state::EdgeManagementState;
 use crate::state_management::node_addition_state::{GateMode, ValueState};
 use crate::{misc::cycle_enum_state, state_management::mouse_state::MouseState};
@@ -40,7 +42,13 @@ fn render_ui_window(
     edge_management_state: Res<State<EdgeManagementState>>,
     value_mode: Res<State<ValueState<Value>>>,
     gate_mode: Res<State<ValueState<Gate>>>,
+    solution_set: Res<SolutionSet>,
     mut contexts: EguiContexts,
+    mut solution_index: ResMut<SolutionIndex>,
+    // Event Writers
+    mut event_writer_evo: EventWriter<ButtonEvoEvent>,
+    mut event_writer_hill: EventWriter<ButtonHillEvent>,
+    mut event_writer_back: EventWriter<BacktrackEvent>,
 ) -> Result {
     let ctx = contexts.ctx_mut();
     egui::Window::new("Settings").show(ctx, |ui| {
@@ -64,6 +72,38 @@ fn render_ui_window(
             ui.label("Toggle Edge Mode (Press J to togle):");
             ui.label(edge_management_state.to_string());
             ui.end_row();
+            ui.separator();
+            ui.label("Solution Finders");
+            ui.end_row();
+            if ui.button("1. HillClimb").clicked() {
+                event_writer_hill.write(ButtonHillEvent);
+            }
+            ui.end_row();
+            if ui.button("2. Genetic Algorithms").clicked() {
+                event_writer_evo.write(ButtonEvoEvent);
+            }
+            ui.end_row();
+
+            // TODO: ui.add_text(); for errors
+            ui.separator();
+            ui.end_row();
+            if ui.button("Backtrack algorithm").clicked() {
+                event_writer_back.write(BacktrackEvent);
+            }
+            ui.end_row();
+            if let Some(lim) = solution_set.0.as_ref().map(|x| x.len()) {
+                if ui.button("<").clicked() {
+                    let v = solution_index.0.unwrap_or(0);
+                    solution_index.0 = Some(v.abs_diff(1));
+                }
+                let label = format!("{}/{}", solution_index.0.unwrap_or_default(), lim);
+                ui.label(label);
+                if ui.button(">").clicked() {
+                    let v = solution_index.0.unwrap_or(0);
+                    solution_index.0 = Some(lim.min(v + 1));
+                }
+            }
+
         });
     });
     Ok(())

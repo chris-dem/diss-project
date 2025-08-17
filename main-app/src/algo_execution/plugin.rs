@@ -1,126 +1,136 @@
-use bevy::{
-    color::palettes::css::{GREEN, RED, YELLOW},
-    prelude::*,
-};
+use bevy::prelude::*;
 use itertools::Itertools;
 use pure_circuit_lib::solution_finders::{
     self,
-    evo_search::{HillParamSet, SolverHillClimb, SolverStruct},
+    evo_search::{EvoParamSet, HillParamSet, SolverEvo, SolverHillClimb},
     solver_trait::SolverTrait,
 };
 
-use crate::state_management::{
-    events::{NodeStatusUpdate, NodeUpdate},
-    state_init::PureCircuitResource,
+use crate::{
+    algo_execution::back::BacktrackPlugin,
+    state_management::{
+        events::{ButtonEvoEvent, ButtonHillEvent, NodeStatusUpdate, NodeUpdate},
+        state_init::PureCircuitResource,
+    },
 };
 
 pub struct AlgoPlugin;
 
 impl Plugin for AlgoPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup);
+        app.add_plugins(BacktrackPlugin)
+            .init_resource::<IsAlgoCurrentlyRunning>()
+            .add_systems(
+                Update,
+                execute_evo_climbing.run_if(resource_equals(IsAlgoCurrentlyRunning(false))),
+            )
+            .add_systems(
+                Update,
+                execute_hill_climbing.run_if(resource_equals(IsAlgoCurrentlyRunning(false))),
+            );
     }
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let text_font: Handle<Font> = asset_server.load("fonts/FiraSans-Bold.ttf");
-
-    let hill_climb_button = spawn_nested_text_bundle(
-        &mut commands,
-        text_font.clone(),
-        Color::Srgba(RED),
-        UiRect::all(Val::Px(10.)),
-        "Hill Climibing",
-        (Val::Px(10.), Val::Px(10.)),
-    );
-    commands
-        .entity(hill_climb_button)
-        .observe(execute_hill_climbing);
-    // spawn_nested_text_bundle(
-    //     &mut commands,
-    //     text_font.clone(),
-    //     Color::Srgba(RED),
-    //     UiRect::all(Val::Px(10.)),
-    //     "Test 2",
-    //     (Val::Px(70.), Val::Px(10.)),
-    // );
-}
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Resource, Default)]
+pub struct IsAlgoCurrentlyRunning(pub bool);
 
 fn execute_hill_climbing(
-    _trigger: Trigger<Pointer<Click>>,
+    mut event_reader_hill: EventReader<ButtonHillEvent>,
     mut pc_resource: ResMut<PureCircuitResource>,
+    mut algo_handle: ResMut<IsAlgoCurrentlyRunning>,
     mut event_writer_status: EventWriter<NodeUpdate>,
     mut event_writer: EventWriter<NodeStatusUpdate>,
 ) {
     let solver = SolverHillClimb::default();
-    let Some(func) = pc_resource.0.to_fitness_function() else {
-        dbg!("Not computable");
-        return;
-    };
-    let count = pc_resource.0.count_values();
-    let param_set = HillParamSet::build(
-        solution_finders::evo_search::Instance::new(func, count),
-        None,
-    );
-    match solver.find_solution(param_set) {
-        Ok(e) => {
-            if pc_resource.0.from_chromosone(&e.chromosone).is_none() {
-                error!("Failed to import chromosone");
-            } else {
-                info!("PC has been successfully imported");
-                event_writer_status.write_batch(
-                    pc_resource
-                        .0
-                        .graph
-                        .node_indices()
-                        .map(NodeUpdate)
-                        .collect_vec(),
-                );
-                event_writer.write_batch(
-                    pc_resource
-                        .0
-                        .graph
-                        .node_indices()
-                        .filter(|p| pc_resource.0.graph[*p].into_node().is_gate())
-                        .map(NodeStatusUpdate)
-                        .collect_vec(),
-                );
+    for _ in event_reader_hill.read() {
+        algo_handle.0 = true;
+        let Some(func) = pc_resource.0.to_fitness_function() else {
+            dbg!("Not computable");
+            return;
+        };
+        let count = pc_resource.0.count_values();
+        let param_set = HillParamSet::build(
+            solution_finders::evo_search::Instance::new(func, count),
+            None,
+        );
+        match solver.find_solution(param_set) {
+            Ok(e) => {
+                if pc_resource.0.from_chromosone(&e.chromosone).is_none() {
+                    error!("Failed to import chromosone");
+                } else {
+                    info!("PC has been successfully imported");
+                    event_writer_status.write_batch(
+                        pc_resource
+                            .0
+                            .graph
+                            .node_indices()
+                            .map(NodeUpdate)
+                            .collect_vec(),
+                    );
+                    event_writer.write_batch(
+                        pc_resource
+                            .0
+                            .graph
+                            .node_indices()
+                            .filter(|p| pc_resource.0.graph[*p].into_node().is_gate())
+                            .map(NodeStatusUpdate)
+                            .collect_vec(),
+                    );
+                }
             }
+            Err(e) => error!("{}", e.to_string()),
         }
-        Err(e) => error!("{}", e.to_string()),
+
+        algo_handle.0 = false;
     }
 }
-fn spawn_nested_text_bundle(
-    builder: &mut Commands,
-    font: Handle<Font>,
-    background_color: Color,
-    margin: UiRect,
-    text: &str,
-    position: (Val, Val),
-) -> Entity {
-    builder
-        .spawn((
-            Node {
-                margin,
-                position_type: PositionType::Absolute,
-                top: position.0,
-                right: position.1,
-                padding: UiRect::axes(Val::Px(5.), Val::Px(5.)),
-                width: Val::Px(100.),
-                height: Val::Px(50.),
-                justify_content: JustifyContent::Center,
-                align_content: AlignContent::Center,
-                ..default()
-            },
-            BackgroundColor(background_color),
-            ZIndex(100),
-        ))
-        .with_children(|builder| {
-            builder.spawn((
-                Text::new(text),
-                TextFont { font, ..default() },
-                TextColor::BLACK,
-            ));
-        })
-        .id()
+fn execute_evo_climbing(
+    mut event_reader_hill: EventReader<ButtonEvoEvent>,
+    mut pc_resource: ResMut<PureCircuitResource>,
+    mut algo_handle: ResMut<IsAlgoCurrentlyRunning>,
+    mut event_writer_status: EventWriter<NodeUpdate>,
+    mut event_writer: EventWriter<NodeStatusUpdate>,
+) {
+    let solver = SolverEvo::default();
+    for _ in event_reader_hill.read() {
+        algo_handle.0 = true;
+        let Some(func) = pc_resource.0.to_fitness_function() else {
+            dbg!("Not computable");
+            return;
+        };
+        let count = pc_resource.0.count_values();
+        let param_set = EvoParamSet::build(
+            solution_finders::evo_search::Instance::new(func, count),
+            None,
+        );
+        match solver.find_solution(param_set) {
+            Ok(e) => {
+                if pc_resource.0.from_chromosone(&e.chromosone).is_none() {
+                    error!("Failed to import chromosone");
+                } else {
+                    info!("PC has been successfully imported");
+                    event_writer_status.write_batch(
+                        pc_resource
+                            .0
+                            .graph
+                            .node_indices()
+                            .map(NodeUpdate)
+                            .collect_vec(),
+                    );
+                    event_writer.write_batch(
+                        pc_resource
+                            .0
+                            .graph
+                            .node_indices()
+                            .filter(|p| pc_resource.0.graph[*p].into_node().is_gate())
+                            .map(NodeStatusUpdate)
+                            .collect_vec(),
+                    );
+                }
+            }
+            Err(e) => error!("{}", e.to_string()),
+        }
+
+        algo_handle.0 = false;
+    }
 }

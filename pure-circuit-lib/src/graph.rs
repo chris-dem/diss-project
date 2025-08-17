@@ -53,6 +53,12 @@ impl<T: Copy, G: Copy> PureCircuitGraph<T, G> {
             .map(|r| (r.source(), r.target(), *r.weight()))
     }
 
+    pub fn get_value_count(&self) -> usize {
+        self.graph
+            .node_weights()
+            .filter(|e| matches!(e.into_node(), NodeValue::ValueNode(_)))
+            .count()
+    }
     pub fn update_node(
         &mut self,
         index: NodeIndex,

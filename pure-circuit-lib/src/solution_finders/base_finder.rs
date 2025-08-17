@@ -5,6 +5,7 @@ use crate::{
 use genetic_algorithm::allele::Allele;
 use itertools::{EitherOrBoth, Itertools};
 use petgraph::{
+    graph::Node,
     prelude::*,
     unionfind::UnionFind,
     visit::{EdgeRef, IntoEdgeReferences, NodeIndexable},
@@ -141,9 +142,7 @@ impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
 }
 
 impl FitnessPureCircuit {
-    // TODO FIX
     pub fn evaluate(&self, inputs: &[Value]) -> Option<usize> {
-        todo!("Not good enough since ordering is maybe lost. Verify");
         let mut errors = 0usize;
         let t = inputs;
         for (g, ins, outs) in self.0.iter().copied() {
@@ -175,9 +174,6 @@ mod test_evo {
 
     use crate::{gates::NodeUnitialised, test_utils::enum_strategy};
     use proptest::prelude::{Strategy, *};
-
-    // #[derive(Debug, Clone)]
-    // struct PurifyFitness;
 
     mod conversion_tests {
         use super::*;

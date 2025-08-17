@@ -42,8 +42,11 @@ pub struct SolutionReturn {
     pub errors: usize,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct EvolutionaryAlgorithm;
+#[derive(Debug, Clone, Copy, Default)]
+pub struct EvolutionaryAlgorithm<G: Fitness> {
+    phantom_data: PhantomData<G>,
+}
+pub type SolverEvo = SolverStruct<EvolutionaryAlgorithm<FitnessPureCircuit>>;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct HillClimbAlgorithm<G: Fitness> {
@@ -52,56 +55,92 @@ pub struct HillClimbAlgorithm<G: Fitness> {
 
 pub type SolverHillClimb = SolverStruct<HillClimbAlgorithm<FitnessPureCircuit>>;
 
-// pub struct EvoParamSet {
-//     pub fitness_func: FitnessPureCircuit,
-//     pub gene_size: usize,
-//     pub gene_hashing: bool,
-//     pub selection: select::SelectWrapper,
-//     pub crossover: crossover::CrossoverWrapper,
-//     pub mutate: mutate::MutateWrapper,
-//     pub fitness_cache: usize,
-//     pub stale_generations: usize,
-//     pub population_size: usize,
-// }
+pub struct EvoParamSet<T> {
+    pub param_type: T,
+    pub gene_hashing: bool,
+    pub selection: select::SelectWrapper,
+    pub crossover: crossover::CrossoverWrapper,
+    pub mutate: mutate::MutateWrapper,
+    pub fitness_cache: usize,
+    pub stale_generations: usize,
+    pub population_size: usize,
+}
 
-// impl SolverTrait for SolverStruct<EvolutionaryAlgorithm> {
-//     type ParamSet = EvoParamSet;
-//     type Solution = SolutionReturn;
-//     fn find_solution(&self, param_set: Self::ParamSet) -> Option<Self::Solution> {
-//         let genotype = ListGenotype::builder()
-//             .with_allele_list(Value::iter().collect_vec())
-//             .with_genes_size(param_set.gene_size)
-//             .with_genes_hashing(param_set.gene_hashing)
-//             .build()
-//             .ok()?;
+impl Default for EvoParamSet<Build> {
+    fn default() -> Self {
+        Self {
+            param_type: Build,
+            gene_hashing: true,
+            fitness_cache: 250,
+            stale_generations: 10_000,
+            population_size: 250,
+            selection: SelectWrapper::Elite(SelectElite::new(0.05, 0.02)),
+            crossover: CrossoverWrapper::Clone(CrossoverClone::new(0.7)),
+            mutate: MutateWrapper::SingleGene(MutateSingleGene::new(0.2)),
+        }
+    }
+}
 
-//         let mut evolve = Evolve::builder()
-//             .with_genotype(genotype.clone())
-//             .with_target_population_size(param_set.population_size)
-//             // Experiment
-//             // .with_select(SelectElite::new(0.5, 0.02))
-//             .with_select(param_set.selection)
-//             // .with_crossover(CrossoverUniform::new(0.7, 0.8))
-//             .with_crossover(param_set.crossover)
-//             // .with_mutate(MutateSingleGene::new(0.2))
-//             .with_mutate(param_set.mutate)
-//             .with_fitness(param_set.fitness_func)
-//             .with_fitness_ordering(FitnessOrdering::Minimize)
-//             .with_fitness_cache(param_set.fitness_cache)
-//             .with_target_fitness_score(0)
-//             // .with_reporter(EvolveReporterSimple::new(100))
-//             .with_max_stale_generations(param_set.stale_generations)
-//             .build()
-//             .ok()?;
-//         evolve.call();
-//         let (a, b) = evolve.best_genes_and_fitness_score()?;
+impl<G: Fitness<Genotype = ListGenotype<Value>>> EvoParamSet<Instance<G>> {
+    pub fn build(instance: Instance<G>, builder: Option<EvoParamSet<Build>>) -> Self {
+        let t = builder.unwrap_or_default();
+        Self {
+            param_type: instance,
+            gene_hashing: t.gene_hashing,
+            fitness_cache: t.fitness_cache,
+            stale_generations: t.stale_generations,
+            population_size: t.population_size,
+            selection: t.selection,
+            crossover: t.crossover,
+            mutate: t.mutate,
+        }
+    }
+}
 
-//         Some(SolutionReturn {
-//             chromosone: a,
-//             errors: b as usize,
-//         })
-//     }
-// }
+impl<G: Fitness<Genotype = ListGenotype<Value>>> SolverTrait
+    for SolverStruct<EvolutionaryAlgorithm<G>>
+{
+    type ParamSet = EvoParamSet<Instance<G>>;
+
+    type Solution = SolutionReturn;
+
+    fn find_solution(&self, param_set: Self::ParamSet) -> ARes<Self::Solution> {
+        let genotype = ListGenotype::builder()
+            .with_allele_list(Value::iter().collect_vec())
+            .with_genes_size(param_set.param_type.size)
+            .with_genes_hashing(param_set.gene_hashing)
+            .build()
+            .map_err(|e| anyhow!(e.0))?;
+
+        let mut evolve = Evolve::builder()
+            .with_genotype(genotype.clone())
+            .with_target_population_size(param_set.population_size)
+            // Experiment
+            // .with_select(SelectElite::new(0.5, 0.02))
+            .with_select(param_set.selection)
+            // .with_crossover(CrossoverUniform::new(0.7, 0.8))
+            .with_crossover(param_set.crossover)
+            // .with_mutate(MutateSingleGene::new(0.2))
+            .with_mutate(param_set.mutate)
+            .with_fitness(param_set.param_type.func)
+            .with_fitness_ordering(FitnessOrdering::Minimize)
+            .with_fitness_cache(param_set.fitness_cache)
+            .with_target_fitness_score(0)
+            // .with_reporter(EvolveReporterSimple::new(100))
+            .with_max_stale_generations(param_set.stale_generations)
+            .build()
+            .map_err(|e| anyhow!(e.0))?;
+        evolve.call();
+        let (a, b) = evolve
+            .best_genes_and_fitness_score()
+            .ok_or(anyhow!("Error when computing score"))?;
+
+        Ok(SolutionReturn {
+            chromosone: a,
+            errors: b as usize,
+        })
+    }
+}
 
 pub struct Instance<T: Fitness<Genotype = ListGenotype<Value>>> {
     func: T,

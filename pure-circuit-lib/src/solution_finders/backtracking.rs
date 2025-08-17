@@ -1,20 +1,17 @@
-use std::{collections::BinaryHeap, fmt::Debug};
+use std::fmt::Debug;
 
 use crate::{
-    gates::{Gate, GraphNode, NodeValue, Value, VoltageOrdering},
+    gates::{GraphNode, NodeValue, Value, VoltageOrdering},
     graph::PureCircuitGraph,
     solution_finders::base_finder::MAX_DEGREE,
 };
 use anyhow::{Result as ARes, anyhow};
 use itertools::Itertools;
-use petgraph::{Direction, graph::Node, prelude::NodeIndex, visit::EdgeRef};
+use petgraph::{Direction, prelude::NodeIndex, visit::EdgeRef};
 use priority_queue::PriorityQueue;
 use strum::IntoEnumIterator;
 
-struct BacktrackAlgorithm;
-struct BacktrackAlgorithmSettings {
-    max_iter: usize,
-}
+pub struct BacktrackAlgorithm;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub(crate) struct BitString(pub(crate) bool, pub(crate) bool, pub(crate) bool);
@@ -119,7 +116,22 @@ impl BitString {
     }
 }
 
-struct PureCircuitBacktrack(Vec<BitString>);
+
+impl<T, G> PureCircuitGraph<T, G> {
+    pub fn from_backtrack_sol(&mut self, v : &[Option<Value>]) -> ARes<()>{
+        for n in  self.graph.node_indices().collect_vec() {
+            let Some(NodeValue::ValueNode(val)) = self.graph.node_weight_mut(n).map(|v| &mut v.node) else {
+                continue;
+            };
+            let Some(Some(new_val)) = v.get(n.index()) else  {
+                return Err(anyhow!("Index missmatch backtrack"));
+            };
+            *val = *new_val;
+        }
+        Ok(())
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct BacktrackKey {
     value_len: usize,
@@ -185,7 +197,7 @@ impl<T, G> PureCircuitGraph<T, G> {
 }
 
 impl BacktrackAlgorithm {
-    fn calculate<T, G>(
+    pub fn calculate<T, G>(
         &self,
         pc_instance: &PureCircuitGraph<T, G>,
     ) -> ARes<Vec<Vec<Option<Value>>>> {
@@ -250,11 +262,9 @@ impl BacktrackAlgorithm {
         queue: &mut BacktrackPQ,
         pc_instance: &PureCircuitGraph<T, G>,
     ) -> ARes<bool> {
-        dbg!("In unit propagate");
         self.assign_node(index_pc, new_value, sol_map, value_map, queue)?;
         self.propagate_value_node(index_pc, sol_map, value_map, queue, pc_instance)?;
         while queue.peek().filter(|(_, p)| p.value_len == 1).is_some() {
-            dbg!("Per iteration");
             let (nod_ind, _k) = queue.pop().unwrap();
             let b = value_map[nod_ind.index()].ok_or(anyhow!("Not exist"))?;
             if b.len() != 1 {
@@ -265,6 +275,10 @@ impl BacktrackAlgorithm {
             let new_val = b.to_value_iter().next().unwrap();
             self.assign_node(nod_ind, new_val, sol_map, value_map, queue)?;
             self.propagate_value_node(nod_ind, sol_map, value_map, queue, pc_instance)?;
+        }
+
+        if queue.is_empty() {
+            return Ok(true);
         }
         if queue.peek().filter(|(_, p)| p.value_len == 0).is_some() {
             return Ok(false);
@@ -400,7 +414,7 @@ impl BacktrackAlgorithm {
 
 #[cfg(test)]
 mod tests {
-    use crate::gates::{NewNode, NodeUnitialised};
+    use crate::gates::{Gate, NewNode, NodeUnitialised};
 
     use super::*;
     mod test_small_circuits {
