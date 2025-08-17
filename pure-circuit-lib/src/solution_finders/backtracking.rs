@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::{
-    gates::{GraphNode, NodeValue, Value, VoltageOrdering},
+    gates::{GraphNode, NodeUnitialised, NodeValue, Value, VoltageOrdering},
     graph::PureCircuitGraph,
     solution_finders::base_finder::MAX_DEGREE,
 };
@@ -116,18 +116,21 @@ impl BitString {
     }
 }
 
-impl<T, G> PureCircuitGraph<T, G> {
+impl<T: Copy, G: Copy> PureCircuitGraph<T, G> {
     pub fn from_backtrack_sol(&mut self, v: &[Option<Value>]) -> ARes<()> {
         for n in self.graph.node_indices().collect_vec() {
-            let Some(NodeValue::ValueNode(val)) =
-                self.graph.node_weight_mut(n).map(|v| &mut v.node)
-            else {
+            if self
+                .graph
+                .node_weight(n)
+                .filter(|f| matches!(f.node, NodeValue::ValueNode(_)))
+                .is_none()
+            {
                 continue;
-            };
+            }
             let Some(Some(new_val)) = v.get(n.index()) else {
                 return Err(anyhow!("Index missmatch backtrack"));
             };
-            *val = *new_val;
+            self.update_node(n, NodeUnitialised::from_value(*new_val))?;
         }
         Ok(())
     }
