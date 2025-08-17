@@ -116,14 +116,15 @@ impl BitString {
     }
 }
 
-
 impl<T, G> PureCircuitGraph<T, G> {
-    pub fn from_backtrack_sol(&mut self, v : &[Option<Value>]) -> ARes<()>{
-        for n in  self.graph.node_indices().collect_vec() {
-            let Some(NodeValue::ValueNode(val)) = self.graph.node_weight_mut(n).map(|v| &mut v.node) else {
+    pub fn from_backtrack_sol(&mut self, v: &[Option<Value>]) -> ARes<()> {
+        for n in self.graph.node_indices().collect_vec() {
+            let Some(NodeValue::ValueNode(val)) =
+                self.graph.node_weight_mut(n).map(|v| &mut v.node)
+            else {
                 continue;
             };
-            let Some(Some(new_val)) = v.get(n.index()) else  {
+            let Some(Some(new_val)) = v.get(n.index()) else {
                 return Err(anyhow!("Index missmatch backtrack"));
             };
             *val = *new_val;
@@ -270,7 +271,10 @@ impl BacktrackAlgorithm {
             if b.len() != 1 {
                 let el = b.len();
                 let el2 = _k.value_len;
-                return Err(anyhow!("Incorrect measurement: Len {el}, Key {el2}"));
+
+                return Err(anyhow!(
+                    "Incorrect measurement: Len {el}, Key {el2}, Map {value_map:?}, Ind {nod_ind:?}"
+                ));
             }
             let new_val = b.to_value_iter().next().unwrap();
             self.assign_node(nod_ind, new_val, sol_map, value_map, queue)?;
@@ -367,18 +371,15 @@ impl BacktrackAlgorithm {
         queue: &mut BacktrackPQ,
         value_map: &mut [Option<BitString>],
     ) -> ARes<()> {
+        // dbg!(&value_map, &queue, &indx, &new_set);
         if value_map[indx].is_none() {
             return Err(anyhow!("Value mapping"));
         }
-        value_map[indx] = Some(
-            value_map[indx]
-                .ok_or(anyhow!("Should exist"))?
-                .op_inter(new_set),
-        );
+        let new_set = value_map[indx].unwrap().op_inter(new_set);
+        value_map[indx] = Some(new_set);
         queue.change_priority_by(&NodeIndex::from(indx as u32), |f| {
             f.value_len = new_set.len();
         });
-        dbg!(&value_map, queue);
         Ok(())
     }
 
@@ -414,7 +415,7 @@ impl BacktrackAlgorithm {
 
 #[cfg(test)]
 mod tests {
-    use crate::gates::{Gate, NewNode, NodeUnitialised};
+    use crate::gates::{Gate, NodeUnitialised};
 
     use super::*;
     mod test_small_circuits {
@@ -547,6 +548,31 @@ mod tests {
             // 011
             // 111
             assert_eq!(7, back.len())
+        }
+
+        #[test]
+        fn test_copy_purify() {
+            let mut pc: PureCircuitGraph = PureCircuitGraph::<(), ()>::new();
+            let v1 = pc.add_node(NodeUnitialised::from_value(Value::Bot), ());
+            let v2 = pc.add_node(NodeUnitialised::from_value(Value::Bot), ());
+            let v3 = pc.add_node(NodeUnitialised::from_value(Value::Bot), ());
+            let g1 = pc.add_node(NodeUnitialised::from_gate(Gate::Purify), ());
+            let g2 = pc.add_node(NodeUnitialised::from_gate(Gate::Copy), ());
+            pc.add_edge(v1, g1, ()).unwrap();
+            pc.add_edge(g1, v2, ()).unwrap(); // Out 1
+            pc.add_edge(g1, v3, ()).unwrap();
+            pc.add_edge(v3, g2, ()).unwrap();
+            pc.add_edge(g2, v1, ()).unwrap(); // Out 2
+
+            let back = match BacktrackAlgorithm.calculate(&pc) {
+                Ok(back) => back,
+                Err(e) => panic!("{}", e.to_string()),
+            };
+            // 000
+            // 001
+            // 011
+            // 111
+            assert_eq!(3, back.len())
         }
     }
 }

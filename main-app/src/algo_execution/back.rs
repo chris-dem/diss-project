@@ -31,6 +31,7 @@ impl Plugin for BacktrackPlugin {
                 modify_index.run_if(
                     resource_changed::<SolutionIndex>
                         .and(not(resource_equals(SolutionIndex(None))))
+                        .and(not(resource_equals(SolutionIndex(Some(0)))))
                         .and(not(resource_equals(SolutionSet(None))))
                         .and(resource_equals(IsAlgoCurrentlyRunning(false))),
                 ),
@@ -82,7 +83,7 @@ fn modify_index(
         .0
         .as_ref()
         .expect("Should be safe by the system conditions");
-    let Some(sol) = sol_set.get(sol_index) else {
+    let Some(sol) = sol_set.get(sol_index - 1) else {
         warn!("Solution index does not match solution set");
         return;
     };
