@@ -1,39 +1,22 @@
-use std::fmt::Debug;
-
 use crate::{
     gates::{Gate, Value, VoltageOrdering},
-    graph::PureCircuitGraph,
     solution_finders::backtracking::BitString,
 };
 use anyhow::{Result as ARes, anyhow};
-use itertools::Itertools;
-use strum::IntoEnumIterator;
 
 use crate::solution_finders::base_finder::MAX_DEGREE;
 
+type BitStringIOState = (
+    [Option<BitString>; MAX_DEGREE],
+    [Option<BitString>; MAX_DEGREE],
+);
+
 impl Gate {
-    fn set_bit_string_unary(
-        self,
-        input: Option<BitString>,
-        output: Option<BitString>,
-    ) -> ARes<(BitString, BitString)> {
-        match (self, input, output) {
-            (Self::Not, Some(b), None) => Ok((b, b.flip())),
-            (Self::Not, None, Some(b)) => Ok((b.flip(), b)),
-            (Self::Copy, Some(b), None) | (Self::Copy, None, Some(b)) => Ok((b, b)),
-            _ => Err(anyhow!(
-                "Incorrect gates provided or non contrasting input/output"
-            )),
-        }
-    }
     pub(crate) fn set_value(
         &self,
         assingment_input: [Option<Value>; MAX_DEGREE],
         assignment_output: [Option<Value>; MAX_DEGREE],
-    ) -> ARes<(
-        [Option<BitString>; MAX_DEGREE],
-        [Option<BitString>; MAX_DEGREE],
-    )> {
+    ) -> ARes<BitStringIOState> {
         #[allow(unreachable_code)]
         match self {
             Self::Not => match (assingment_input, assignment_output) {
@@ -168,7 +151,7 @@ impl Gate {
             },
             Self::Nor => {
                 let (ins, outs) = Gate::And.set_value(
-                    assingment_input.clone().map(|x| x.map(|x| x.inverse())),
+                    assingment_input.map(|x| x.map(|x| x.inverse())),
                     assignment_output,
                 )?;
                 let mut vals = [None, None];
@@ -183,7 +166,7 @@ impl Gate {
             }
             Self::Nand => {
                 let (ins, outs) = Gate::Or.set_value(
-                    assingment_input.clone().map(|x| x.map(|x| x.inverse())),
+                    assingment_input.map(|x| x.map(|x| x.inverse())),
                     assignment_output,
                 )?;
                 let mut vals = [None, None];
@@ -279,6 +262,7 @@ impl Gate {
                 }
                 _ => ARes::Err(anyhow!("Incorrect assingment for {self}")),
             },
+            #[allow(unreachable_patterns)]
             _ => unimplemented!("Gate {self} was not implemented"),
         }
     }

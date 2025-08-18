@@ -77,7 +77,7 @@ impl BitString {
             if self.2 { Some(Value::One) } else { None },
         ]
         .into_iter()
-        .filter_map(|x| x)
+        .flatten()
         .collect_vec()
     }
 
@@ -145,16 +145,18 @@ struct BacktrackKey {
 
 impl PartialOrd for BacktrackKey {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        (
-            other.value_len as isize,
-            other.is_start as usize,
-            other.neighbours,
+        Some(
+            (
+                other.value_len as isize,
+                other.is_start as usize,
+                other.neighbours,
+            )
+                .cmp(&(
+                    self.value_len as isize,
+                    self.is_start as usize,
+                    self.neighbours,
+                )),
         )
-            .partial_cmp(&(
-                self.value_len as isize,
-                self.is_start as usize,
-                self.neighbours,
-            ))
     }
 }
 

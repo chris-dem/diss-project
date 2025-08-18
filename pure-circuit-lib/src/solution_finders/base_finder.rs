@@ -1,15 +1,10 @@
 use crate::{
-    gates::{Gate, NewNode, NodeUnitialised, NodeValue, Value},
+    gates::{Gate, NodeUnitialised, NodeValue, Value},
     graph::PureCircuitGraph,
 };
 use genetic_algorithm::allele::Allele;
 use itertools::{EitherOrBoth, Itertools};
-use petgraph::{
-    graph::Node,
-    prelude::*,
-    unionfind::UnionFind,
-    visit::{EdgeRef, IntoEdgeReferences, NodeIndexable},
-};
+use petgraph::prelude::*;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
@@ -40,7 +35,7 @@ impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
             .graph
             .node_indices()
             .filter(|n| !self.graph[*n].node.is_gate())
-            .zip_longest(chromosome.into_iter())
+            .zip_longest(chromosome.iter())
             .collect::<Box<[_]>>()
         {
             match e {
@@ -72,10 +67,7 @@ impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
         let map = self
             .graph
             .node_indices()
-            .filter_map(|i| match self.graph[i].into_node() {
-                NodeValue::ValueNode(_) => Some(i),
-                NodeValue::GateNode { .. } => None,
-            })
+            .filter(|i| matches!(self.graph[*i].into_node(), NodeValue::ValueNode(_)))
             .enumerate()
             .map(|(a, b)| (b, a))
             .collect::<HashMap<NodeIndex, usize>>();

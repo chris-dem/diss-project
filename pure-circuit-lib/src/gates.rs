@@ -25,14 +25,14 @@ pub struct InformationOrdering(pub Value);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Rand, Default, Hash)]
 pub struct VoltageOrdering(pub Value);
 
-impl Into<u8> for  VoltageOrdering {
-     fn into(self) -> u8 {
-            match self.0 {
+impl From<VoltageOrdering> for u8 {
+    fn from(value: VoltageOrdering) -> Self {
+        match value.0 {
             Value::Zero => 0,
             Value::Bot => 1,
             Value::One => 2,
-         }
-     }
+        }
+    }
 }
 
 impl PartialOrd for InformationOrdering {
@@ -48,6 +48,7 @@ impl PartialOrd for InformationOrdering {
 }
 
 impl PartialOrd for VoltageOrdering {
+    #[allow(clippy::non_canonical_partial_ord_impl)]
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         let fst = match self.0 {
             Value::Zero => 0,
@@ -60,7 +61,7 @@ impl PartialOrd for VoltageOrdering {
             Value::Bot => 1,
             Value::One => 2,
         };
-        fst.partial_cmp(&snd)
+        Some(fst.cmp(&snd))
     }
 }
 
@@ -200,11 +201,11 @@ pub enum NodeValue<I: NodeStateTrait> {
 
 impl<T: NodeStateTrait> NodeValue<T> {
     pub fn compare_types<I: NodeStateTrait>(&self, other: NodeValue<I>) -> bool {
-        match (self, other) {
-            (Self::GateNode { .. }, NodeValue::<I>::GateNode { .. }) => true,
-            (Self::ValueNode(_), NodeValue::<I>::ValueNode(_)) => true,
-            _ => false,
-        }
+        matches!(
+            (self, other),
+            (Self::GateNode { .. }, NodeValue::<I>::GateNode { .. })
+                | (Self::ValueNode(_), NodeValue::<I>::ValueNode(_))
+        )
     }
 }
 

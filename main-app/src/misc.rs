@@ -1,7 +1,5 @@
 use bevy::{prelude::*, state::state::FreelyMutableState};
-use pure_circuit_lib::{EnumCycle, gates::GraphNode};
-
-use crate::state_management::node_addition_state::GateMode;
+use pure_circuit_lib::EnumCycle;
 
 pub fn cycle_enum_state<T: EnumCycle + States + FreelyMutableState>(
     current_state: Res<State<T>>,
@@ -10,10 +8,11 @@ pub fn cycle_enum_state<T: EnumCycle + States + FreelyMutableState>(
     next_state.set(current_state.toggle());
 }
 
-pub fn compare_nodes(current: GraphNode, other: GateMode) -> bool {
-    match (current, other) {
-        (GraphNode::ValueNode(_), GateMode::Value) => true,
-        (GraphNode::GateNode { .. }, GateMode::Gate) => true,
-        _ => false,
-    }
-}
+// pub fn compare_nodes(current: GraphNode, other: GateMode) -> bool {
+//     matches!()
+//     match (current, other) {
+//         (GraphNode::ValueNode(_), GateMode::Value) => true,
+//         (GraphNode::GateNode { .. }, GateMode::Gate) => true,
+//         _ => false,
+//     }
+// }

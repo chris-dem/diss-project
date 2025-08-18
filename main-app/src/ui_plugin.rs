@@ -36,6 +36,7 @@ impl Plugin for UiPlugin {
 #[derive(Component)]
 struct MainPassCube;
 
+#[allow(clippy::too_many_arguments)]
 fn render_ui_window(
     gate_state: Res<State<GateMode>>,
     mouse_state: Res<State<MouseState>>,

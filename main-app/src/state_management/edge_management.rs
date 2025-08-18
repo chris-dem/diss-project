@@ -203,6 +203,7 @@ fn add_text<T: Display>(src: Vec2, dest: Vec2, val: T, text_font: TextFont) -> i
 #[derive(Debug, Clone, Copy, Component)]
 pub struct EdgeLabel;
 
+#[allow(clippy::type_complexity)]
 fn on_transition(
     query_moved_circles: Query<
         (&Transform, &ValueComponent),
@@ -281,6 +282,7 @@ fn on_transition(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn on_click(
     trigger: Trigger<Pointer<Click>>,
     query: Query<&ValueComponent>,

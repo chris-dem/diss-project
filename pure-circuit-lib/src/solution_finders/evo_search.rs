@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use anyhow::{Result as ARes, anyhow};
 use genetic_algorithm::{
     crossover,
-    fitness::{self, Fitness},
+    fitness::Fitness,
     genotype::{Genotype, ListGenotype},
     mutate, select,
     strategy::{
@@ -12,7 +12,6 @@ use genetic_algorithm::{
     },
 };
 use itertools::Itertools;
-use petgraph::Direction::Incoming;
 use strum::IntoEnumIterator;
 
 use crate::{
@@ -112,7 +111,7 @@ impl<G: Fitness<Genotype = ListGenotype<Value>>> SolverTrait
             .build()
             .map_err(|e| anyhow!(e.0))?;
 
-        let mut evolve = Evolve::builder()
+        let evolve = Evolve::builder()
             .with_genotype(genotype.clone())
             .with_target_population_size(param_set.population_size)
             // Experiment
@@ -126,12 +125,12 @@ impl<G: Fitness<Genotype = ListGenotype<Value>>> SolverTrait
             .with_fitness_ordering(FitnessOrdering::Minimize)
             .with_fitness_cache(param_set.fitness_cache)
             .with_target_fitness_score(0)
-            // .with_reporter(EvolveReporterSimple::new(100))
+            .with_par_fitness(true)
             .with_max_stale_generations(param_set.stale_generations)
-            .build()
+            .call_par_speciated(5)
             .map_err(|e| anyhow!(e.0))?;
-        evolve.call();
         let (a, b) = evolve
+            .0
             .best_genes_and_fitness_score()
             .ok_or(anyhow!("Error when computing score"))?;
 
@@ -206,7 +205,7 @@ impl<G: Fitness<Genotype = ListGenotype<Value>>> SolverTrait
             .build()
             .map_err(|e| anyhow!(e.0))?;
 
-        let mut hill_climb = HillClimb::builder()
+        let hill_climb = HillClimb::builder()
             .with_genotype(genotype.clone())
             .with_variant(param_set.hill_variant)
             .with_max_stale_generations(param_set.stale_generations)
@@ -214,11 +213,13 @@ impl<G: Fitness<Genotype = ListGenotype<Value>>> SolverTrait
             .with_fitness_cache(param_set.fitness_cache)
             .with_fitness_ordering(FitnessOrdering::Minimize)
             .with_target_fitness_score(0)
-            .build()
+            .with_par_fitness(true)
+            .call_par_repeatedly(50)
             .map_err(|e| anyhow!(e.0))?;
 
-        hill_climb.call();
+        // hill_climb.call();
         let (a, b) = hill_climb
+            .0
             .best_genes_and_fitness_score()
             .ok_or(anyhow!("Error when computing score"))?;
 
