@@ -14,11 +14,25 @@ use crate::{
     },
 };
 
+#[derive(Clone, Resource, Default, PartialEq, Eq)]
+pub struct ErrorMessage(pub(crate) Option<String>);
+
+impl ErrorMessage {
+    pub(super) fn reset(&mut self) {
+        self.0 = None;
+    }
+
+    pub(super) fn set(&mut self, other: &str) {
+        self.0 = Some(other.into());
+    }
+}
+
 pub struct AlgoPlugin;
 
 impl Plugin for AlgoPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(BacktrackPlugin)
+            .init_resource::<ErrorMessage>()
             .init_resource::<IsAlgoCurrentlyRunning>()
             .add_systems(
                 Update,
@@ -37,6 +51,7 @@ pub struct IsAlgoCurrentlyRunning(pub bool);
 fn execute_hill_climbing(
     mut event_reader_hill: EventReader<ButtonHillEvent>,
     mut pc_resource: ResMut<PureCircuitResource>,
+    mut err_message: ResMut<ErrorMessage>,
     mut algo_handle: ResMut<IsAlgoCurrentlyRunning>,
     mut event_writer_status: EventWriter<NodeUpdate>,
     mut event_writer: EventWriter<NodeStatusUpdate>,
@@ -46,7 +61,10 @@ fn execute_hill_climbing(
     for _ in event_reader_hill.read() {
         algo_handle.0 = true;
         let Some(func) = pc_resource.0.to_fitness_function() else {
-            dbg!("Not computable");
+            err_message.set(
+                "Unable to create fitness function. Check if there are any invalid arity gates",
+            );
+            algo_handle.0 = false;
             return;
         };
         let count = pc_resource.0.count_values();
@@ -78,6 +96,7 @@ fn execute_hill_climbing(
                             .collect_vec(),
                     );
                 }
+                err_message.reset();
             }
             Err(e) => error!("{}", e.to_string()),
         }
@@ -86,9 +105,11 @@ fn execute_hill_climbing(
         algo_handle.0 = false;
     }
 }
+
 fn execute_evo_climbing(
     mut event_reader_hill: EventReader<ButtonEvoEvent>,
     mut pc_resource: ResMut<PureCircuitResource>,
+    mut err_message: ResMut<ErrorMessage>,
     mut algo_handle: ResMut<IsAlgoCurrentlyRunning>,
     mut event_writer_status: EventWriter<NodeUpdate>,
     mut event_writer: EventWriter<NodeStatusUpdate>,
@@ -98,7 +119,10 @@ fn execute_evo_climbing(
     for _ in event_reader_hill.read() {
         algo_handle.0 = true;
         let Some(func) = pc_resource.0.to_fitness_function() else {
-            warn!("Unable to create fitness function. Check if there are any invalid arity gates");
+            err_message.set(
+                "Unable to create fitness function. Check if there are any invalid arity gates",
+            );
+            algo_handle.0 = false;
             return;
         };
         let count = pc_resource.0.count_values();
@@ -129,6 +153,7 @@ fn execute_evo_climbing(
                             .map(NodeStatusUpdate)
                             .collect_vec(),
                     );
+                    err_message.reset();
                 }
             }
             Err(e) => error!("{}", e.to_string()),

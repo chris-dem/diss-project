@@ -1,4 +1,5 @@
 use crate::algo_execution::back::{SolutionIndex, SolutionSet};
+use crate::algo_execution::plugin::ErrorMessage;
 use crate::state_management::events::{BacktrackEvent, ButtonEvoEvent, ButtonHillEvent};
 use crate::state_management::mouse_state::EdgeManagementState;
 use crate::state_management::node_addition_state::{GateMode, ValueState};
@@ -44,6 +45,7 @@ fn render_ui_window(
     value_mode: Res<State<ValueState<Value>>>,
     gate_mode: Res<State<ValueState<Gate>>>,
     solution_set: Res<SolutionSet>,
+    err_message: Res<ErrorMessage>,
     mut contexts: EguiContexts,
     mut solution_index: ResMut<SolutionIndex>,
     // Event Writers
@@ -74,6 +76,7 @@ fn render_ui_window(
             ui.label(edge_management_state.to_string());
             ui.end_row();
             ui.separator();
+            ui.end_row();
             ui.label("Solution Finders");
             ui.end_row();
             if ui.button("1. HillClimb").clicked() {
@@ -141,7 +144,17 @@ fn render_ui_window(
                             }
                         });
                 });
+                ui.end_row();
             }
+
+            ui.separator();
+            ui.end_row();
+            ui.vertical(|ui| {
+                ui.label("Error message");
+                if let Some(s) = err_message.0.as_ref() {
+                    ui.label(s);
+                }
+            })
         });
     });
     Ok(())

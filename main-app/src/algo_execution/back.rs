@@ -1,6 +1,9 @@
 use crate::{
-    algo_execution::plugin::IsAlgoCurrentlyRunning,
-    state_management::{events::{BacktrackEvent, NodeStatusUpdate, NodeUpdate}, state_init::PureCircuitResource},
+    algo_execution::plugin::{ErrorMessage, IsAlgoCurrentlyRunning},
+    state_management::{
+        events::{BacktrackEvent, NodeStatusUpdate, NodeUpdate},
+        state_init::PureCircuitResource,
+    },
 };
 use bevy::prelude::*;
 use itertools::Itertools;
@@ -45,8 +48,7 @@ pub(super) fn execute_backtrack_handler(
     mut sol_index: ResMut<SolutionIndex>,
     mut algo_handle: ResMut<IsAlgoCurrentlyRunning>,
     pc_resource: Res<PureCircuitResource>,
-    // mut event_writer_status: EventWriter<NodeUpdate>,
-    // mut event_writer: EventWriter<NodeStatusUpdate>,
+    mut err_message: ResMut<ErrorMessage>,
 ) {
     for _ in event_back.read() {
         if pc_resource.0.get_value_count() > MAX_LIMIT {
@@ -55,10 +57,14 @@ pub(super) fn execute_backtrack_handler(
         algo_handle.0 = true;
         match BacktrackAlgorithm.calculate(&pc_resource.0) {
             Ok(v) => {
+                err_message.reset();
                 sol_set.0 = Some(v);
                 sol_index.0 = None;
             }
             Err(e) => {
+                err_message.set(
+                    "Unable to run backtrack method. Check if there are any invalid arity gates",
+                );
                 error!("{}", e.to_string());
                 sol_set.0 = None;
                 sol_index.0 = None;
