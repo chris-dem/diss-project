@@ -96,8 +96,6 @@ pub fn manage_node_update(
                             commands.entity(*c).despawn();
                         }
                     }
-                } else {
-                    error!("Could not find children");
                 }
             }
         };

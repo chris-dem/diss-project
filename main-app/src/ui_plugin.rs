@@ -1,12 +1,12 @@
 use crate::algo_execution::back::{SolutionIndex, SolutionSet};
-use crate::algo_execution::plugin::ErrorMessage;
+use crate::algo_execution::plugin::{ErrorMessage, IsAlgoCurrentlyRunning};
 use crate::state_management::events::{BacktrackEvent, ButtonEvoEvent, ButtonHillEvent};
 use crate::state_management::mouse_state::EdgeManagementState;
 use crate::state_management::node_addition_state::{GateMode, ValueState};
 use crate::{misc::cycle_enum_state, state_management::mouse_state::MouseState};
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 use bevy_egui::{EguiContextPass, EguiContexts, EguiPlugin};
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+// use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use egui::{Color32, Frame, Stroke};
 use pure_circuit_lib::gates::{Gate, Value};
 
@@ -17,7 +17,7 @@ impl Plugin for UiPlugin {
         app.add_plugins(EguiPlugin {
             enable_multipass_for_primary_context: true,
         })
-        .add_plugins(WorldInspectorPlugin::new())
+        // .add_plugins(WorldInspectorPlugin::new())
         .add_systems(
             EguiContextPass,
             cycle_enum_state::<GateMode>.run_if(input_just_pressed(KeyCode::KeyG)),
@@ -46,6 +46,7 @@ fn render_ui_window(
     gate_mode: Res<State<ValueState<Gate>>>,
     solution_set: Res<SolutionSet>,
     err_message: Res<ErrorMessage>,
+    algo_status: Res<IsAlgoCurrentlyRunning>,
     mut contexts: EguiContexts,
     mut solution_index: ResMut<SolutionIndex>,
     // Event Writers
@@ -147,6 +148,18 @@ fn render_ui_window(
                 ui.end_row();
             }
 
+            ui.separator();
+            ui.end_row();
+            ui.horizontal(|ui| {
+                ui.label("Algorithm status:");
+                let label = if algo_status.0 {
+                    "Running"
+                } else {
+                    "Not Running"
+                };
+                ui.label(label);
+            });
+            ui.end_row();
             ui.separator();
             ui.end_row();
             ui.vertical(|ui| {
