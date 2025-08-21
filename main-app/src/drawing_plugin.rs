@@ -9,7 +9,7 @@ use bevy::{
 };
 use bevy_prototype_lyon::prelude::*;
 use itertools::Itertools;
-use petgraph::Direction;
+use petgraph::{Direction, graph::Node};
 use pure_circuit_lib::gates::{Gate, GraphStruct, Value};
 use pure_circuit_lib::{
     EnumCycle,
@@ -17,10 +17,11 @@ use pure_circuit_lib::{
 };
 
 use crate::{
+    algo_execution::back::SolutionIndex,
     assets::{ASSET_DICT, generate_bundle_from_asset},
     constants::D_RADIUS,
     state_management::{
-        events::{NodeStatusUpdate, NodeUpdate},
+        events::{IndexReset, NodeStatusUpdate, NodeUpdate, SolutionReset},
         mouse_state::{MousePositions, MouseState},
         node_addition_state::{GateMode, ValueComponent, ValueState},
         state_init::PureCircuitResource,
@@ -118,6 +119,7 @@ fn hover_draw(
     gizmos.circle_2d(world_pos, D_RADIUS, col);
 }
 
+#[allow(clippy::too_many_arguments)]
 fn click_draw(
     mouse_resource: Res<MousePositions>,
     gate_mode: Res<State<GateMode>>,
@@ -125,6 +127,7 @@ fn click_draw(
     gate_state: Res<State<ValueState<Gate>>>,
     mut pc_resource: ResMut<PureCircuitResource>,
     mut event_writer_status: EventWriter<NodeUpdate>,
+    mut event_sol_reset: EventWriter<SolutionReset>,
     mut commands: Commands,
 ) {
     let Some(pos) = mouse_resource.0 else {
@@ -150,8 +153,8 @@ fn click_draw(
     ));
     let index = pc_resource.0.add_node(val, entity.id());
     entity.insert(ValueComponent(index));
+    event_sol_reset.write(SolutionReset);
     event_writer_status.write(NodeUpdate(index));
-    // entity.with_children(|parent| value_spawner(parent, val, &asset_server));
 
     if *gate_mode.get() == GateMode::Gate {
         let Some(NodeValue::GateNode {
@@ -176,12 +179,15 @@ fn click_draw(
         .observe(on_hover_exit);
 }
 
+#[allow(clippy::too_many_arguments)]
 fn on_click(
     trigger: Trigger<Pointer<Click>>,
     mut query: Query<&mut ValueComponent, With<ValueComponent>>,
     mut pc_resource: ResMut<PureCircuitResource>,
     mut event_writer: EventWriter<NodeStatusUpdate>,
     mut event_writer_status: EventWriter<NodeUpdate>,
+    mut event_sol_reset: EventWriter<SolutionReset>,
+    mut event_idx_reset: EventWriter<IndexReset>,
     mouse_state: Res<State<MouseState>>,
 ) {
     if *mouse_state.get() == MouseState::Edge {
@@ -219,8 +225,12 @@ fn on_click(
     };
 
     event_writer_status.write(NodeUpdate(current_value.0));
-
     event_writer.write_batch(gates.into_iter().map(NodeStatusUpdate));
+    if matches!(node, NodeValue::GateNode { .. }) {
+        event_sol_reset.write_default();
+    } else {
+        event_idx_reset.write_default();
+    }
 }
 
 #[derive(Debug, Clone, Resource, Default, PartialEq, Eq)]
@@ -289,6 +299,7 @@ fn on_hover_del(
     mut hovered_node: ResMut<HoveredNode>,
     mut pc_resource: ResMut<PureCircuitResource>,
     mut event_writer: EventWriter<NodeStatusUpdate>,
+    mut event_sol_writer: EventWriter<SolutionReset>,
     mut commands: Commands,
 ) {
     let Some(target) = hovered_node.0.take() else {
@@ -324,6 +335,7 @@ fn on_hover_del(
                 }
             }
         };
+        event_sol_writer.write_default();
     }
 }
 

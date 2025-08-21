@@ -9,7 +9,7 @@ use pure_circuit_lib::solution_finders::{
 use crate::{
     algo_execution::back::BacktrackPlugin,
     state_management::{
-        events::{ButtonEvoEvent, ButtonHillEvent, NodeStatusUpdate, NodeUpdate},
+        events::{ButtonEvoEvent, ButtonHillEvent, IndexReset, NodeStatusUpdate, NodeUpdate},
         state_init::PureCircuitResource,
     },
 };
@@ -40,6 +40,7 @@ fn execute_hill_climbing(
     mut algo_handle: ResMut<IsAlgoCurrentlyRunning>,
     mut event_writer_status: EventWriter<NodeUpdate>,
     mut event_writer: EventWriter<NodeStatusUpdate>,
+    mut event_idx_writer: EventWriter<IndexReset>,
 ) {
     let solver = SolverHillClimb::default();
     for _ in event_reader_hill.read() {
@@ -81,6 +82,7 @@ fn execute_hill_climbing(
             Err(e) => error!("{}", e.to_string()),
         }
 
+        event_idx_writer.write_default();
         algo_handle.0 = false;
     }
 }
@@ -90,12 +92,13 @@ fn execute_evo_climbing(
     mut algo_handle: ResMut<IsAlgoCurrentlyRunning>,
     mut event_writer_status: EventWriter<NodeUpdate>,
     mut event_writer: EventWriter<NodeStatusUpdate>,
+    mut event_idx_writer: EventWriter<IndexReset>,
 ) {
     let solver = SolverEvo::default();
     for _ in event_reader_hill.read() {
         algo_handle.0 = true;
         let Some(func) = pc_resource.0.to_fitness_function() else {
-            dbg!("Not computable");
+            warn!("Unable to create fitness function. Check if there are any invalid arity gates");
             return;
         };
         let count = pc_resource.0.count_values();
@@ -131,6 +134,7 @@ fn execute_evo_climbing(
             Err(e) => error!("{}", e.to_string()),
         }
 
+        event_idx_writer.write_default();
         algo_handle.0 = false;
     }
 }

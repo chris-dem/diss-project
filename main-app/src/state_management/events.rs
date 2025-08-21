@@ -3,6 +3,7 @@ use petgraph::prelude::*;
 use pure_circuit_lib::gates::{GraphStruct, NodeValue};
 
 use crate::{
+    algo_execution::back::{SolutionIndex, SolutionSet},
     drawing_plugin::{ErrorCircle, GateStatusComponent, value_spawner},
     state_management::{node_addition_state::ValueComponent, state_init::PureCircuitResource},
 };
@@ -24,15 +25,24 @@ pub struct ButtonHillEvent;
 #[derive(Debug, Clone, Event)]
 pub struct BacktrackEvent;
 
-impl Plugin for EventManagerPlugin {
+#[derive(Debug, Clone, Event, Default)]
+pub struct SolutionReset;
 
+#[derive(Debug, Clone, Event, Default)]
+pub struct IndexReset;
+
+impl Plugin for EventManagerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, manage_node_update_status)
             .add_systems(Update, manage_node_update)
+            .add_systems(Update, manage_solution_reset)
+            .add_systems(Update, index_reset)
             .add_event::<NodeUpdate>()
             .add_event::<ButtonEvoEvent>()
             .add_event::<ButtonHillEvent>()
             .add_event::<BacktrackEvent>()
+            .add_event::<SolutionReset>()
+            .add_event::<IndexReset>()
             .add_event::<NodeStatusUpdate>();
     }
 }
@@ -97,4 +107,21 @@ pub fn manage_node_update(
     }
 }
 
+pub fn manage_solution_reset(
+    mut event_reader: EventReader<SolutionReset>,
+    mut sol_indx: ResMut<SolutionIndex>,
+    mut sol_val: ResMut<SolutionSet>,
+) {
+    for _ in event_reader.read() {
+        sol_indx.0 = None;
+        sol_val.0 = None;
+    }
+}
 
+pub fn index_reset(mut event_reader: EventReader<IndexReset>, mut sol_indx: ResMut<SolutionIndex>) {
+    for _ in event_reader.read() {
+        if let Some(v) = &mut sol_indx.0 {
+            *v = 0;
+        }
+    }
+}
