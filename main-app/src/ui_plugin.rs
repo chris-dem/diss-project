@@ -6,7 +6,7 @@ use crate::{misc::cycle_enum_state, state_management::mouse_state::MouseState};
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 use bevy_egui::{EguiContextPass, EguiContexts, EguiPlugin};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use egui::Color32;
+use egui::{Color32, Frame, Stroke};
 use pure_circuit_lib::gates::{Gate, Value};
 
 pub struct UiPlugin;
@@ -93,18 +93,55 @@ fn render_ui_window(
             }
             ui.end_row();
             if let Some(lim) = solution_set.0.as_ref().map(|x| x.len()) {
-                if ui.button("<").clicked() {
-                    let v = solution_index.0.unwrap_or(0);
-                    solution_index.0 = Some(v.abs_diff(1));
-                }
-                let label = format!("{}/{}", solution_index.0.unwrap_or_default(), lim);
-                ui.label(label);
-                if ui.button(">").clicked() {
-                    let v = solution_index.0.unwrap_or(0);
-                    solution_index.0 = Some(lim.min(v + 1));
-                }
-            }
+                ui.horizontal(|ui| {
+                    // Left button with frame
+                    Frame::new()
+                        .fill(Color32::from_rgb(40, 40, 40))
+                        .inner_margin(egui::Margin {
+                            left: 10,
+                            right: 10,
+                            top: 5,
+                            bottom: 5,
+                        })
+                        .show(ui, |ui| {
+                            if ui.button("<").clicked() {
+                                let v = solution_index.0.unwrap_or(0);
+                                solution_index.0 = Some(v.abs_diff(1));
+                            }
+                        });
 
+                    // Center label with frame
+                    let label = format!("{}/{}", solution_index.0.unwrap_or_default(), lim);
+                    Frame::new()
+                        .fill(Color32::from_rgb(50, 50, 50))
+                        .stroke(Stroke::new(2.0, Color32::WHITE))
+                        .inner_margin(egui::Margin {
+                            left: 10,
+                            right: 10,
+                            top: 5,
+                            bottom: 5,
+                        })
+                        .show(ui, |ui| {
+                            ui.label(label);
+                        });
+
+                    // Right button with frame
+                    Frame::new()
+                        .fill(Color32::from_rgb(40, 40, 40))
+                        .inner_margin(egui::Margin {
+                            left: 10,
+                            right: 10,
+                            top: 5,
+                            bottom: 5,
+                        })
+                        .show(ui, |ui| {
+                            if ui.button(">").clicked() {
+                                let v = solution_index.0.unwrap_or(0);
+                                solution_index.0 = Some(lim.min(v + 1));
+                            }
+                        });
+                });
+            }
         });
     });
     Ok(())
