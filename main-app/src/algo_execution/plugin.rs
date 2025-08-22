@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use genetic_algorithm::strategy::prelude::HillClimbVariant;
 use itertools::Itertools;
 use pure_circuit_lib::solution_finders::{
     self,
