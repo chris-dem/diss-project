@@ -9,7 +9,7 @@ use bevy::{
 };
 use bevy_prototype_lyon::prelude::*;
 use itertools::Itertools;
-use petgraph::{Direction, graph::Node};
+use petgraph::Direction;
 use pure_circuit_lib::gates::{Gate, GraphStruct, Value};
 use pure_circuit_lib::{
     EnumCycle,
@@ -17,7 +17,6 @@ use pure_circuit_lib::{
 };
 
 use crate::{
-    algo_execution::back::SolutionIndex,
     assets::{ASSET_DICT, generate_bundle_from_asset},
     constants::D_RADIUS,
     state_management::{
@@ -251,7 +250,6 @@ pub(crate) fn value_spawner(
     match value {
         NodeUnitialised::ValueNode(val) => {
             let ind: usize = val.into();
-            dbg!(ind, val);
             for bund in generate_bundle_from_asset(
                 ASSET_DICT[ind].0.as_slice(),
                 ASSET_DICT[ind].1.as_slice(),
@@ -264,7 +262,6 @@ pub(crate) fn value_spawner(
             }
         }
         NodeUnitialised::GateNode { gate: val, .. } => {
-            // TODO
             parent.spawn((
                 Text2d::new(format!("{}", val)),
                 text_font,

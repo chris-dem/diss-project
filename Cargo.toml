@@ -5,3 +5,4 @@ members = ["main-app", "misc-lib", "macro-export", "pure-circuit-lib"]
 
 [workspace.dependencies]
 petgraph = "0.8.2"
+genetic_algorithm = "0.20.5"

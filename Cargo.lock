@@ -3681,6 +3681,7 @@ dependencies = [
  "bevy_prototype_lyon",
  "bevy_svg",
  "egui",
+ "genetic_algorithm",
  "itertools 0.14.0",
  "petgraph 0.8.2",
  "pure-circuit-lib",

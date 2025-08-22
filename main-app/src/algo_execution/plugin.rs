@@ -1,8 +1,9 @@
 use bevy::prelude::*;
+use genetic_algorithm::strategy::prelude::HillClimbVariant;
 use itertools::Itertools;
 use pure_circuit_lib::solution_finders::{
     self,
-    evo_search::{EvoParamSet, HillParamSet, SolverEvo, SolverHillClimb},
+    evo_search::{Build, EvoParamSet, HillParamSet, SolverEvo, SolverHillClimb},
     solver_trait::SolverTrait,
 };
 
@@ -29,11 +30,19 @@ impl ErrorMessage {
 
 pub struct AlgoPlugin;
 
+#[derive(Debug, Clone, Resource, Default)]
+pub struct HillParam(pub(crate) HillParamSet<Build>);
+
+#[derive(Debug, Clone, Resource, Default)]
+pub struct EvoParam(pub(crate) EvoParamSet<Build>);
+
 impl Plugin for AlgoPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(BacktrackPlugin)
             .init_resource::<ErrorMessage>()
             .init_resource::<IsAlgoCurrentlyRunning>()
+            .init_resource::<HillParam>()
+            .init_resource::<EvoParam>()
             .add_systems(
                 Update,
                 execute_evo_climbing.run_if(resource_equals(IsAlgoCurrentlyRunning(false))),
@@ -48,7 +57,9 @@ impl Plugin for AlgoPlugin {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Resource, Default)]
 pub struct IsAlgoCurrentlyRunning(pub bool);
 
+#[allow(clippy::too_many_arguments)]
 fn execute_hill_climbing(
+    hill_params: Res<HillParam>,
     mut event_reader_hill: EventReader<ButtonHillEvent>,
     mut pc_resource: ResMut<PureCircuitResource>,
     mut err_message: ResMut<ErrorMessage>,
@@ -68,10 +79,9 @@ fn execute_hill_climbing(
             return;
         };
         let count = pc_resource.0.count_values();
-        let param_set = HillParamSet::build(
-            solution_finders::evo_search::Instance::new(func, count),
-            None,
-        );
+        let param_set = hill_params
+            .0
+            .build(solution_finders::evo_search::Instance::new(func, count));
         match solver.find_solution(param_set) {
             Ok(e) => {
                 if pc_resource.0.from_chromosone(&e.chromosone).is_none() {
@@ -106,7 +116,9 @@ fn execute_hill_climbing(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn execute_evo_climbing(
+    evo_params: Res<EvoParam>,
     mut event_reader_hill: EventReader<ButtonEvoEvent>,
     mut pc_resource: ResMut<PureCircuitResource>,
     mut err_message: ResMut<ErrorMessage>,
@@ -126,10 +138,9 @@ fn execute_evo_climbing(
             return;
         };
         let count = pc_resource.0.count_values();
-        let param_set = EvoParamSet::build(
-            solution_finders::evo_search::Instance::new(func, count),
-            None,
-        );
+        let param_set = evo_params
+            .0
+            .build(solution_finders::evo_search::Instance::new(func, count));
         match solver.find_solution(param_set) {
             Ok(e) => {
                 if pc_resource.0.from_chromosone(&e.chromosone).is_none() {

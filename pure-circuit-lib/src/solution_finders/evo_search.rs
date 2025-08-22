@@ -54,15 +54,102 @@ pub struct HillClimbAlgorithm<G: Fitness> {
 
 pub type SolverHillClimb = SolverStruct<HillClimbAlgorithm<FitnessPureCircuit>>;
 
+#[derive(Debug, Clone, Copy)]
+pub struct NewType<T>(pub T);
+
+impl PartialEq for NewType<HillClimbVariant> {
+    fn eq(&self, other: &Self) -> bool {
+        matches!(
+            (self.0, other.0),
+            (
+                HillClimbVariant::SteepestAscent,
+                HillClimbVariant::SteepestAscent
+            ) | (HillClimbVariant::Stochastic, HillClimbVariant::Stochastic)
+        )
+    }
+}
+
+impl Eq for NewType<HillClimbVariant> {}
+
+impl PartialEq for NewType<SelectWrapper> {
+    fn eq(&self, other: &Self) -> bool {
+        matches!(
+            (&self.0, &other.0),
+            (SelectWrapper::Tournament(_), SelectWrapper::Tournament(_))
+                | (SelectWrapper::Elite(_), SelectWrapper::Elite(_))
+        )
+    }
+}
+
+impl Eq for NewType<SelectWrapper> {}
+
+impl PartialEq for NewType<CrossoverWrapper> {
+    fn eq(&self, other: &Self) -> bool {
+        matches!(
+            (&self.0, &other.0),
+            (CrossoverWrapper::Clone(_), CrossoverWrapper::Clone(_))
+                | (
+                    CrossoverWrapper::MultiGene(_),
+                    CrossoverWrapper::MultiGene(_)
+                )
+                | (
+                    CrossoverWrapper::MultiPoint(_),
+                    CrossoverWrapper::MultiPoint(_)
+                )
+                | (
+                    CrossoverWrapper::Rejuvenate(_),
+                    CrossoverWrapper::Rejuvenate(_)
+                )
+                | (
+                    CrossoverWrapper::SingleGene(_),
+                    CrossoverWrapper::SingleGene(_)
+                )
+                | (
+                    CrossoverWrapper::SinglePoint(_),
+                    CrossoverWrapper::SinglePoint(_)
+                )
+                | (CrossoverWrapper::Uniform(_), CrossoverWrapper::Uniform(_))
+        )
+    }
+}
+
+impl Eq for NewType<CrossoverWrapper> {}
+
+impl PartialEq for NewType<MutateWrapper> {
+    fn eq(&self, other: &Self) -> bool {
+        matches!(
+            (&self.0, &other.0),
+            (MutateWrapper::MultiGene(_), MutateWrapper::MultiGene(_))
+                | (
+                    MutateWrapper::MultiGeneDynamic(_),
+                    MutateWrapper::MultiGeneDynamic(_)
+                )
+                | (
+                    MutateWrapper::MultiGeneRange(_),
+                    MutateWrapper::MultiGeneRange(_)
+                )
+                | (MutateWrapper::SingleGene(_), MutateWrapper::SingleGene(_))
+                | (
+                    MutateWrapper::SingleGeneDynamic(_),
+                    MutateWrapper::SingleGeneDynamic(_)
+                )
+        )
+    }
+}
+
+impl Eq for NewType<MutateWrapper> {}
+
+#[derive(Debug, Clone)]
 pub struct EvoParamSet<T> {
     pub param_type: T,
     pub gene_hashing: bool,
-    pub selection: select::SelectWrapper,
-    pub crossover: crossover::CrossoverWrapper,
-    pub mutate: mutate::MutateWrapper,
+    pub selection: NewType<select::SelectWrapper>,
+    pub crossover: NewType<crossover::CrossoverWrapper>,
+    pub mutate: NewType<mutate::MutateWrapper>,
     pub fitness_cache: usize,
     pub stale_generations: usize,
     pub population_size: usize,
+    pub num_of_runs: usize,
 }
 
 impl Default for EvoParamSet<Build> {
@@ -73,25 +160,29 @@ impl Default for EvoParamSet<Build> {
             fitness_cache: 250,
             stale_generations: 10_000,
             population_size: 250,
-            selection: SelectWrapper::Elite(SelectElite::new(0.05, 0.02)),
-            crossover: CrossoverWrapper::Clone(CrossoverClone::new(0.7)),
-            mutate: MutateWrapper::SingleGene(MutateSingleGene::new(0.2)),
+            num_of_runs: 15,
+            selection: NewType(SelectWrapper::Elite(SelectElite::new(0.05, 0.02))),
+            crossover: NewType(CrossoverWrapper::Uniform(CrossoverUniform::new(0.5, 0.1))),
+            mutate: NewType(MutateWrapper::MultiGene(MutateMultiGene::new(1, 0.2))),
         }
     }
 }
 
-impl<G: Fitness<Genotype = ListGenotype<Value>>> EvoParamSet<Instance<G>> {
-    pub fn build(instance: Instance<G>, builder: Option<EvoParamSet<Build>>) -> Self {
-        let t = builder.unwrap_or_default();
-        Self {
+impl EvoParamSet<Build> {
+    pub fn build<G: Fitness<Genotype = ListGenotype<Value>>>(
+        &self,
+        instance: Instance<G>,
+    ) -> EvoParamSet<Instance<G>> {
+        EvoParamSet {
             param_type: instance,
-            gene_hashing: t.gene_hashing,
-            fitness_cache: t.fitness_cache,
-            stale_generations: t.stale_generations,
-            population_size: t.population_size,
-            selection: t.selection,
-            crossover: t.crossover,
-            mutate: t.mutate,
+            gene_hashing: self.gene_hashing,
+            fitness_cache: self.fitness_cache,
+            stale_generations: self.stale_generations,
+            population_size: self.population_size,
+            selection: self.selection.clone(),
+            crossover: self.crossover.clone(),
+            mutate: self.mutate.clone(),
+            num_of_runs: self.num_of_runs,
         }
     }
 }
@@ -115,19 +206,16 @@ impl<G: Fitness<Genotype = ListGenotype<Value>>> SolverTrait
             .with_genotype(genotype.clone())
             .with_target_population_size(param_set.population_size)
             // Experiment
-            // .with_select(SelectElite::new(0.5, 0.02))
-            .with_select(param_set.selection)
-            // .with_crossover(CrossoverUniform::new(0.7, 0.8))
-            .with_crossover(param_set.crossover)
-            // .with_mutate(MutateSingleGene::new(0.2))
-            .with_mutate(param_set.mutate)
+            .with_select(param_set.selection.0)
+            .with_crossover(param_set.crossover.0)
+            .with_mutate(param_set.mutate.0)
             .with_fitness(param_set.param_type.func)
             .with_fitness_ordering(FitnessOrdering::Minimize)
             .with_fitness_cache(param_set.fitness_cache)
             .with_target_fitness_score(0)
             .with_par_fitness(true)
             .with_max_stale_generations(param_set.stale_generations)
-            .call_par_speciated(5)
+            .call_par_speciated(param_set.num_of_runs)
             .map_err(|e| anyhow!(e.0))?;
         let (a, b) = evolve
             .0
@@ -152,15 +240,18 @@ impl<T: Fitness<Genotype = ListGenotype<Value>>> Instance<T> {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct Build;
 
+#[derive(Clone, Debug, Copy)]
 pub struct HillParamSet<T> {
     pub param_type: T,
     pub gene_hashing: bool,
-    pub hill_variant: HillClimbVariant,
+    pub hill_variant: NewType<HillClimbVariant>,
     pub fitness_cache: usize,
     pub stale_generations: usize,
     pub population_size: usize,
+    pub num_of_runs: usize,
 }
 
 impl Default for HillParamSet<Build> {
@@ -168,24 +259,28 @@ impl Default for HillParamSet<Build> {
         Self {
             param_type: Build,
             gene_hashing: true,
-            hill_variant: HillClimbVariant::Stochastic,
+            hill_variant: NewType(HillClimbVariant::Stochastic),
             fitness_cache: 250,
             stale_generations: 10_000,
             population_size: 250,
+            num_of_runs: 15,
         }
     }
 }
 
-impl<G: Fitness<Genotype = ListGenotype<Value>>> HillParamSet<Instance<G>> {
-    pub fn build(instance: Instance<G>, builder: Option<HillParamSet<Build>>) -> Self {
-        let t = builder.unwrap_or_default();
-        Self {
+impl HillParamSet<Build> {
+    pub fn build<G: Fitness<Genotype = ListGenotype<Value>>>(
+        &self,
+        instance: Instance<G>,
+    ) -> HillParamSet<Instance<G>> {
+        HillParamSet {
             param_type: instance,
-            gene_hashing: t.gene_hashing,
-            hill_variant: t.hill_variant,
-            fitness_cache: t.fitness_cache,
-            stale_generations: t.stale_generations,
-            population_size: t.population_size,
+            gene_hashing: self.gene_hashing,
+            hill_variant: self.hill_variant,
+            fitness_cache: self.fitness_cache,
+            stale_generations: self.stale_generations,
+            population_size: self.population_size,
+            num_of_runs: self.num_of_runs,
         }
     }
 }
@@ -207,7 +302,7 @@ impl<G: Fitness<Genotype = ListGenotype<Value>>> SolverTrait
 
         let hill_climb = HillClimb::builder()
             .with_genotype(genotype.clone())
-            .with_variant(param_set.hill_variant)
+            .with_variant(param_set.hill_variant.0)
             .with_max_stale_generations(param_set.stale_generations)
             .with_fitness(param_set.param_type.func)
             .with_fitness_cache(param_set.fitness_cache)

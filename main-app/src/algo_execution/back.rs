@@ -51,7 +51,7 @@ pub(super) fn execute_backtrack_handler(
     mut err_message: ResMut<ErrorMessage>,
 ) {
     for _ in event_back.read() {
-        if pc_resource.0.get_value_count() > MAX_LIMIT {
+        if pc_resource.0.get_value_count() > MAX_LIMIT || pc_resource.0.get_value_count() == 0 {
             continue;
         }
         algo_handle.0 = true;

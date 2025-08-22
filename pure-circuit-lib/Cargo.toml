@@ -16,9 +16,9 @@ strum_macros = "0.27.1"
 log = "0.4.27"
 anyhow = "1.0.98"
 petgraph = { workspace = true, features = ["stable_graph"] }
-genetic_algorithm = "0.20.5"
 env_logger = "0.11.8"
 mockall = "0.13.1"
 bitvec = "1.0.1"
 rstest = "0.26.1"
 priority-queue = "2.5.0"
+genetic_algorithm.workspace = true
