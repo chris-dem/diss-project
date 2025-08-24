@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
 use itertools::Itertools;
 use pure_circuit_lib::solution_finders::{
     self,
@@ -140,7 +140,9 @@ fn execute_evo_climbing(
         let param_set = evo_params
             .0
             .build(solution_finders::evo_search::Instance::new(func, count));
-        match solver.find_solution(param_set) {
+        let res = AsyncComputeTaskPool::get()
+            .scope(|s| s.spawn(async { solver.find_solution(param_set) }));
+        match &res[0] {
             Ok(e) => {
                 if pc_resource.0.from_chromosone(&e.chromosone).is_none() {
                     error!("Failed to import chromosone");

@@ -150,6 +150,7 @@ pub struct EvoParamSet<T> {
     pub stale_generations: usize,
     pub population_size: usize,
     pub num_of_species: usize,
+    pub with_parallel: bool,
 }
 
 impl Default for EvoParamSet<Build> {
@@ -164,6 +165,7 @@ impl Default for EvoParamSet<Build> {
             selection: NewType(SelectWrapper::Elite(SelectElite::new(0.05, 0.02))),
             crossover: NewType(CrossoverWrapper::Uniform(CrossoverUniform::new(0.5, 0.1))),
             mutate: NewType(MutateWrapper::MultiGene(MutateMultiGene::new(1, 0.2))),
+            with_parallel: false,
         }
     }
 }
@@ -183,6 +185,7 @@ impl EvoParamSet<Build> {
             crossover: self.crossover.clone(),
             mutate: self.mutate.clone(),
             num_of_species: self.num_of_species,
+            with_parallel: self.with_parallel,
         }
     }
 }
@@ -213,10 +216,19 @@ impl<G: Fitness<Genotype = ListGenotype<Value>>> SolverTrait
             .with_fitness_ordering(FitnessOrdering::Minimize)
             .with_fitness_cache(param_set.fitness_cache)
             .with_target_fitness_score(0)
-            .with_par_fitness(true)
-            .with_max_stale_generations(param_set.stale_generations)
-            .call_par_speciated(param_set.num_of_species)
-            .map_err(|e| anyhow!(e.0))?;
+            .with_max_stale_generations(param_set.stale_generations);
+
+        let evolve = if param_set.with_parallel {
+            evolve
+                .with_par_fitness(true)
+                .call_par_speciated(param_set.num_of_species)
+                .map_err(|e| anyhow!(e.0))?
+        } else {
+            evolve
+                .with_par_fitness(false)
+                .call_speciated(param_set.num_of_species)
+                .map_err(|e| anyhow!(e.0))?
+        };
         let (a, b) = evolve
             .0
             .best_genes_and_fitness_score()

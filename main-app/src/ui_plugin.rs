@@ -242,6 +242,9 @@ fn genetic_algorithm_ui(
         ui.label("Number of species:");
         ui.add(egui::DragValue::new(&mut evo_params.0.num_of_species).range(1..=25usize));
         ui.end_row();
+        ui.label("With parallelisation:");
+        ui.checkbox(&mut evo_params.0.with_parallel,"");
+        ui.end_row();
         ui.label("Population Size size:");
         ui.add(egui::DragValue::new(&mut evo_params.0.population_size).range(10..=500usize));
         ui.end_row();
