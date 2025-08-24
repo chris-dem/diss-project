@@ -377,6 +377,7 @@ fn on_click(
                     .neighbors_directed(graph_node.0, Direction::Incoming)
                     .count()
                     == 1
+                    && *edge_management_state.get() == EdgeManagementState::AddEdge
             {
                 warn!("In-degree of value node can be at most 1");
                 return;
