@@ -190,17 +190,25 @@ impl<T: Copy, G: Copy> PureCircuitGraph<T, G> {
         dir: Direction,
     ) -> Result<Box<[Value]>, GraphError> {
         self.graph
-            .neighbors_directed(indx, dir)
+            .edges_directed(indx, dir)
             .map(|m| {
+                let n = match dir {
+                    Direction::Incoming => m.source(),
+                    Direction::Outgoing => m.target(),
+                };
                 if let Some(NodeValue::ValueNode(ret)) =
-                    self.graph.node_weight(m).map(GraphStruct::into_node)
+                    self.graph.node_weight(n).map(GraphStruct::into_node)
                 {
-                    Ok(ret)
+                    Ok((m.weight().0, ret))
                 } else {
                     Err(GraphError::NonHeterogeneousEdge)
                 }
             })
-            .collect::<Result<_, _>>()
+            .collect::<Result<Box<[(u64, Value)]>, GraphError>>()
+            .map(|mut v| {
+                v.sort_by_key(|t| t.0);
+                v.into_iter().map(|t| t.1).collect::<Box<[Value]>>()
+            })
     }
 
     pub fn add_edge(
