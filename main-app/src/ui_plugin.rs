@@ -273,11 +273,11 @@ fn selection_ui(ui: &mut Ui, evo_params: &mut EvoParam) {
             egui::Frame::new()
                 .stroke(Stroke::new(1., Color32::WHITE))
                 .show(ui, |ui| {
-                    ui.label("Replacement rate:");
+                    ui.label("Replacement rate:(Population of parents to preserve)");
                     ui.add(egui::DragValue::new(replacement_rate).range(0.01..=0.9f64));
                     ui.end_row();
 
-                    ui.label("Elitism rate:");
+                    ui.label("Elitism rate:(Fraction of best chromosomes to keep)");
                     ui.add(egui::DragValue::new(elitism_rate).range(0.01..=0.9f64));
                     ui.end_row();
                 });
@@ -300,11 +300,11 @@ fn selection_ui(ui: &mut Ui, evo_params: &mut EvoParam) {
             egui::Frame::new()
                 .stroke(Stroke::new(1., Color32::WHITE))
                 .show(ui, |ui| {
-                    ui.label("Replacement rate:");
+                    ui.label("Replacement rate:(Population of parents to preserve)");
                     ui.add(egui::DragValue::new(replacement_rate).range(0.01..=0.9f64));
                     ui.end_row();
 
-                    ui.label("Elitism rate:");
+                    ui.label("Elitism rate:(Fraction of best chromosomes to keep)");
                     ui.add(egui::DragValue::new(elitism_rate).range(0.01..=0.9f64));
                     ui.end_row();
 

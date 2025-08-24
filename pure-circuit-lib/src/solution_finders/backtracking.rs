@@ -237,7 +237,7 @@ impl BacktrackAlgorithm {
         let Some((val_ind, _)) = queue.pop() else {
             return Err(anyhow!("Empty graph"));
         };
-
+        let mut op_count = 1;
         let mut count = vec![];
         for v in value_map[val_ind.index()]
             .ok_or(anyhow!("Node mapping incorrect"))?
@@ -252,10 +252,11 @@ impl BacktrackAlgorithm {
                 continue;
             }
 
-            let mut res = self.backtrack_inner(pc_instance, val_map, q, sol_arr)?;
+            let mut res = self.backtrack_inner(pc_instance, val_map, q, sol_arr, &mut op_count)?;
             count.append(&mut res);
         }
 
+        dbg!(op_count);
         Ok(count)
     }
 
@@ -394,10 +395,12 @@ impl BacktrackAlgorithm {
         value_map: Vec<Option<BitString>>,
         mut queue: BacktrackPQ,
         sol_map: Vec<Option<Value>>,
+        op_count: &mut usize,
     ) -> ARes<Vec<Vec<Option<Value>>>> {
         let Some((val_ind, _)) = queue.pop() else {
             return Ok(vec![sol_map]);
         };
+        *op_count += 1;
         let mut count = vec![];
         for v in value_map[val_ind.index()]
             .ok_or(anyhow!("Node mapping incorrect"))?
@@ -411,7 +414,7 @@ impl BacktrackAlgorithm {
             if !res {
                 continue;
             }
-            let mut res = self.backtrack_inner(pc_instance, val_map, q, sol_arr)?;
+            let mut res = self.backtrack_inner(pc_instance, val_map, q, sol_arr, op_count)?;
             count.append(&mut res);
         }
         Ok(count)
