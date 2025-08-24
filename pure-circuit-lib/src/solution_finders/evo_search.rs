@@ -149,7 +149,7 @@ pub struct EvoParamSet<T> {
     pub fitness_cache: usize,
     pub stale_generations: usize,
     pub population_size: usize,
-    pub num_of_runs: usize,
+    pub num_of_species: usize,
 }
 
 impl Default for EvoParamSet<Build> {
@@ -160,7 +160,7 @@ impl Default for EvoParamSet<Build> {
             fitness_cache: 250,
             stale_generations: 10_000,
             population_size: 250,
-            num_of_runs: 15,
+            num_of_species: 15,
             selection: NewType(SelectWrapper::Elite(SelectElite::new(0.05, 0.02))),
             crossover: NewType(CrossoverWrapper::Uniform(CrossoverUniform::new(0.5, 0.1))),
             mutate: NewType(MutateWrapper::MultiGene(MutateMultiGene::new(1, 0.2))),
@@ -182,7 +182,7 @@ impl EvoParamSet<Build> {
             selection: self.selection.clone(),
             crossover: self.crossover.clone(),
             mutate: self.mutate.clone(),
-            num_of_runs: self.num_of_runs,
+            num_of_species: self.num_of_species,
         }
     }
 }
@@ -215,7 +215,7 @@ impl<G: Fitness<Genotype = ListGenotype<Value>>> SolverTrait
             .with_target_fitness_score(0)
             .with_par_fitness(true)
             .with_max_stale_generations(param_set.stale_generations)
-            .call_par_speciated(param_set.num_of_runs)
+            .call_par_speciated(param_set.num_of_species)
             .map_err(|e| anyhow!(e.0))?;
         let (a, b) = evolve
             .0

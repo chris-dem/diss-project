@@ -89,9 +89,13 @@ fn render_ui_window(
                 ui.end_row();
                 ui.label("To move camera, press L-CTRL and drag");
                 ui.end_row();
+                ui.label("To displace a node, press M and drag");
+                ui.end_row();
                 ui.label("To place a node: Mouse Mode = Node and Hold A");
                 ui.end_row();
                 ui.label("To place an edge: Mouse Mode = Edge and select two nodes");
+                ui.end_row();
+                ui.label("To cancel edge addition, press ESC");
                 ui.end_row();
                 ui.separator();
                 ui.end_row();
@@ -105,6 +109,8 @@ fn render_ui_window(
                 genetic_algorithm_ui(ui, &mut event_writer_evo, &mut evo_params, vals);
 
                 ui.separator();
+                ui.end_row();
+                ui.heading("Solution enumeration");
                 ui.end_row();
                 if ui.button("Backtrack algorithm").clicked() {
                     event_writer_back.write(BacktrackEvent);
@@ -233,8 +239,8 @@ fn genetic_algorithm_ui(
     }
     ui.end_row();
     ui.vertical(|ui| {
-        ui.label("Number of runs:");
-        ui.add(egui::DragValue::new(&mut evo_params.0.num_of_runs).range(1..=50usize));
+        ui.label("Number of species:");
+        ui.add(egui::DragValue::new(&mut evo_params.0.num_of_species).range(1..=25usize));
         ui.end_row();
         ui.label("Population Size size:");
         ui.add(egui::DragValue::new(&mut evo_params.0.population_size).range(10..=500usize));

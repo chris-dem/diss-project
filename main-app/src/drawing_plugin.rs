@@ -43,7 +43,7 @@ impl Plugin for DrawingPlugin {
                 on_hover_del
                     .run_if(input_just_pressed(KeyCode::KeyD))
                     .run_if(not(resource_equals(HoveredNode(None))))
-                    .run_if(not(in_state(MouseState::Node))),
+                    .run_if(not(in_state(MouseState::Edge))),
             )
             .add_systems(PostUpdate, highlight_error_values)
             .add_systems(
@@ -278,10 +278,11 @@ pub(crate) fn value_spawner(
 
 fn on_drag(
     trigger: Trigger<Pointer<Drag>>,
+    mouse_state: Res<State<MouseState>>,
     mut query: Query<&mut Transform, With<Pickable>>,
     key: Res<ButtonInput<KeyCode>>,
 ) {
-    if !key.pressed(KeyCode::KeyM) {
+    if !key.pressed(KeyCode::KeyM) && !matches!(mouse_state.get(), MouseState::Node) {
         return;
     }
 
