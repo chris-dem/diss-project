@@ -72,11 +72,11 @@ fn render_ui_window(
                 let text = gate_state.to_string();
                 let [r, g, b, _a] = Srgba::from(col).to_u8_array();
                 let col = Color32::from_rgb(r, g, b);
-                ui.label("Toggle Node Mode (Press m to togle):");
-                ui.colored_label(col, text);
-                ui.end_row();
                 ui.label("Toggle Mouse Mode (Press [ to togle):");
                 ui.label(mouse_state.to_string());
+                ui.end_row();
+                ui.label("Toggle Node Mode (Press m to togle):");
+                ui.colored_label(col, text);
                 ui.end_row();
                 ui.label("Toggle Value Mode (Press V to togle):");
                 ui.label(value_mode.to_string());
@@ -86,6 +86,12 @@ fn render_ui_window(
                 ui.end_row();
                 ui.label("Toggle Edge Mode (Press J to togle):");
                 ui.label(edge_management_state.to_string());
+                ui.end_row();
+                ui.label("To move camera, press L-CTRL and drag");
+                ui.end_row();
+                ui.label("To place a node: Mouse Mode = Node and Hold A");
+                ui.end_row();
+                ui.label("To place an edge: Mouse Mode = Edge and select two nodes");
                 ui.end_row();
                 ui.separator();
                 ui.end_row();

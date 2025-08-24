@@ -8,7 +8,7 @@ use crate::{
     },
 };
 use bevy::{
-    color::palettes::css::{ORANGE, RED, YELLOW},
+    color::palettes::css::{LIGHT_BLUE, ORANGE, RED, YELLOW},
     input::common_conditions::input_just_pressed,
     prelude::*,
 };
@@ -68,6 +68,12 @@ impl Plugin for EdgeManagementPlugin {
             )
             .add_systems(
                 Update,
+                highlight_source_node
+                    .run_if(in_state(MouseState::Edge))
+                    .run_if(not(resource_equals(SelectedNodeMode(None)))),
+            )
+            .add_systems(
+                Update,
                 edge_management_toggle
                     .run_if(in_state(MouseState::Edge))
                     .run_if(input_just_pressed(KeyCode::KeyJ)),
@@ -89,6 +95,25 @@ fn edge_management_toggle(
     mut next_state: ResMut<NextState<EdgeManagementState>>,
 ) {
     next_state.set(state.get().toggle());
+}
+
+fn highlight_source_node(
+    pc_resource: Res<PureCircuitResource>,
+    selected_node_mode: Res<SelectedNodeMode>,
+    query_node: Query<&Transform>,
+    mut gizmos: Gizmos,
+) {
+    let Some(ind) = selected_node_mode.0 else {
+        warn!("Cannot highlight if not selected");
+        return;
+    };
+
+    let Ok(trans) = query_node.get(pc_resource.0.graph[ind].additional_info) else {
+        warn!("Cannot find entity");
+        return;
+    };
+
+    gizmos.circle_2d(trans.translation.xy(), D_RADIUS + 0.5, LIGHT_BLUE);
 }
 
 fn highlight_possible_nodes(
@@ -124,6 +149,16 @@ fn highlight_possible_nodes(
                     continue;
                 };
                 if !w.compare_types(mode) {
+                    if !w.is_gate()
+                        && pc_resource
+                            .0
+                            .graph
+                            .neighbors_directed(g.0, Direction::Incoming)
+                            .count()
+                            >= 1
+                    {
+                        continue;
+                    }
                     gizmos.circle_2d(t.translation.xy(), D_RADIUS + 5., ORANGE);
                 }
             }
@@ -149,7 +184,8 @@ fn highlight_possible_nodes(
     }
 }
 
-fn reset_edge_mode(mut next_state: ResMut<NextState<EdgeState>>) {
+fn reset_edge_mode(mut next_state: ResMut<NextState<EdgeState>>, mut sel: ResMut<SelectedNodeMode>) {
+    sel.0 = None;
     next_state.set(EdgeState::DefaultState);
 }
 
@@ -332,6 +368,17 @@ fn on_click(
 
             if current_node.compare_types(sel_gate_mode) {
                 warn!("Selected homogeneous node");
+                return;
+            }
+            if !current_node.is_gate()
+                && pc_resource
+                    .0
+                    .graph
+                    .neighbors_directed(graph_node.0, Direction::Incoming)
+                    .count()
+                    == 1
+            {
+                warn!("In-degree of value node can be at most 1");
                 return;
             }
 

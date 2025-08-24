@@ -42,9 +42,10 @@ impl Plugin for DrawingPlugin {
                 Update,
                 on_hover_del
                     .run_if(input_just_pressed(KeyCode::KeyD))
-                    .run_if(not(resource_equals(HoveredNode(None)))),
+                    .run_if(not(resource_equals(HoveredNode(None))))
+                    .run_if(not(in_state(MouseState::Node))),
             )
-            .add_systems(Update, highlight_error_values)
+            .add_systems(PostUpdate, highlight_error_values)
             .add_systems(
                 PostUpdate,
                 hover_draw
