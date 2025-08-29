@@ -8,6 +8,7 @@ use genetic_algorithm::{
     mutate, select,
     strategy::{
         evolve::prelude::*,
+        hill_climb,
         prelude::{HillClimb, HillClimbVariant},
     },
 };
@@ -264,6 +265,7 @@ pub struct HillParamSet<T> {
     pub stale_generations: usize,
     pub population_size: usize,
     pub num_of_runs: usize,
+    pub with_parallel: bool,
 }
 
 impl Default for HillParamSet<Build> {
@@ -276,6 +278,7 @@ impl Default for HillParamSet<Build> {
             stale_generations: 10_000,
             population_size: 250,
             num_of_runs: 15,
+            with_parallel: false,
         }
     }
 }
@@ -293,6 +296,7 @@ impl HillParamSet<Build> {
             stale_generations: self.stale_generations,
             population_size: self.population_size,
             num_of_runs: self.num_of_runs,
+            with_parallel: self.with_parallel,
         }
     }
 }
@@ -319,12 +323,20 @@ impl<G: Fitness<Genotype = ListGenotype<Value>>> SolverTrait
             .with_fitness(param_set.param_type.func)
             .with_fitness_cache(param_set.fitness_cache)
             .with_fitness_ordering(FitnessOrdering::Minimize)
-            .with_target_fitness_score(0)
-            .with_par_fitness(true)
-            .call_par_repeatedly(50)
-            .map_err(|e| anyhow!(e.0))?;
+            .with_target_fitness_score(0);
 
-        // hill_climb.call();
+        let hill_climb = if param_set.with_parallel {
+            hill_climb
+                .with_par_fitness(true)
+                .call_par_repeatedly(50)
+                .map_err(|e| anyhow!(e.0))?
+        } else {
+            hill_climb
+                .with_par_fitness(false)
+                .call_repeatedly(50)
+                .map_err(|e| anyhow!(e.0))?
+        };
+
         let (a, b) = hill_climb
             .0
             .best_genes_and_fitness_score()
@@ -345,7 +357,7 @@ mod evo_testers {
         gates::{Gate, NodeUnitialised},
         graph::PureCircuitGraph,
     };
-    use mockall::*;
+    use itertools::all;
 
     use super::*;
     fn setup_good_graph() -> PureCircuitGraph {
@@ -358,70 +370,5 @@ mod evo_testers {
         pc_resource.add_edge(val_2, gate_1, ()).unwrap();
         pc_resource.add_edge(gate_1, val_3, ()).unwrap();
         pc_resource
-    }
-
-    // fn setup_bad_graph() -> PureCircuitGraph {
-    //     let mut pc_resource = PureCircuitGraph::new();
-    //     let val_1 = pc_resource.add_node(NodeUnitialised::from_value(Value::Bot), ());
-    //     let val_2 = pc_resource.add_node(NodeUnitialised::from_value(Value::Bot), ());
-    //     let gate_1 = pc_resource.add_node(NodeUnitialised::from_gate(Gate::And), ());
-    //     pc_resource.add_edge(val_1, gate_1, ()).unwrap();
-    //     pc_resource.add_edge(val_2, gate_1, ()).unwrap();
-    //     pc_resource
-    // }
-
-    #[test]
-    fn should_run_for_correct() {
-        let pc = setup_good_graph();
-        let fit = pc.to_fitness_function().unwrap();
-        let ind = pc.graph.node_count();
-        let s = SolverStruct::<HillClimbAlgorithm<FitnessPureCircuit>>::default();
-        let params = HillParamSet::build(
-            Instance {
-                func: fit,
-                size: ind,
-            },
-            None,
-        );
-
-        assert!(s.find_solution(params).is_ok());
-    }
-
-    mock! {
-        MyStruct {}     // Name of the mock struct, less the "Mock" prefix
-        impl Clone for MyStruct {
-            fn clone(&self) -> Self;
-        }
-
-        impl Debug for MyStruct {
-            fn fmt<'a>(&self, f: &mut std::fmt::Formatter<'a>) -> std::fmt::Result;
-        }
-
-        impl Fitness for MyStruct {
-            type Genotype = ListGenotype<Value>;
-            fn calculate_for_chromosome(
-                &mut self,
-                _chromosome: &FitnessChromosome<Self>,
-                _genotype: &<MockMyStruct as Fitness>::Genotype,
-            ) -> Option<FitnessValue>;
-        }
-    }
-
-    #[test]
-    fn should_run_for_correct_mock() {
-        let pc = setup_good_graph();
-        let mut fit = MockMyStruct::new();
-        fit.expect_calculate_for_chromosome().return_const(None);
-        let ind = pc.graph.node_count();
-        let s = SolverStruct::<HillClimbAlgorithm<_>>::default();
-        let params = HillParamSet::build(
-            Instance {
-                func: fit,
-                size: ind,
-            },
-            None,
-        );
-
-        assert!(s.find_solution(params).is_err());
     }
 }

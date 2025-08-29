@@ -3,8 +3,8 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{Data, DeriveInput, parse_macro_input};
 
-/// A procedural macro that adds a `describe` function to enum types
-/// Usage: #[derive(EnumDescribe)]
+/// A procedural macro to implement enum cycles
+/// Used only for enums that contain unit types
 #[proc_macro_derive(EnumCycle)]
 pub fn enum_cycle(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

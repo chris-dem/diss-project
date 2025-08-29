@@ -1,0 +1,397 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.71s
+     Running unittests src/lib.rs (target/debug/deps/macro_export-f63ec1eeaa022246)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/macro_tests.rs (target/debug/deps/macro_tests-a05bf15df3094e11)
+
+running 3 tests
+test tests::func_cycle ... ok
+test tests::rgb_cycle ... ok
+test tests::rb_cycle ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/main_app-d613e20c754320d4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/misc_lib-0bf5722fa5ad5fa4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/pure_circuit_lib-54a25ee5f82bff3f)
+
+running 345 tests
+test gates::tests::binary_gates::test_nand ... ok
+test gates::tests::binary_gates::test_or ... ok
+test gates::tests::binary_gates::test_nor ... ok
+test gates::tests::binary_gates::test_purify ... ok
+test gates::tests::binary_gates::test_and ... ok
+test gates::tests::errors::test_nondeterministic ... ok
+test gates::tests::unary_gates::test_copy ... ok
+test gates::tests::unary_gates::test_not ... ok
+test graph::tests::edge_tests::test_simple_arity_correct_assignment ... ok
+test graph::tests::edge_tests::test_simple_arity_incorrect_assignment ... ok
+test graph::tests::edge_tests::test_duplicates ... ok
+test solution_finders::backtracking::tests::test_small_circuits::test_copy ... ok
+test solution_finders::backtracking::tests::test_complex_circuits::test_copy_purify ... ok
+test solution_finders::backtracking::tests::test_small_circuits::test_nand ... ok
+test solution_finders::backtracking::tests::test_small_circuits::test_nor ... ok
+test solution_finders::backtracking::tests::test_small_circuits::test_not ... ok
+test solution_finders::backtracking::tests::test_small_circuits::test_and ... ok
+test solution_finders::backtracking::tests::test_complex_circuits::test_purify_chain ... ok
+test solution_finders::backtracking::tests::test_small_circuits::test_purify ... ok
+test solution_finders::base_finder::test_evo::conversion_tests::check_mapping_1 ... ok
+test solution_finders::backtracking::tests::test_small_circuits::test_or ... ok
+test solution_finders::base_finder::test_evo::conversion_tests::check_mapping_2 ... ok
+test solution_finders::base_finder::test_evo::conversion_tests::check_mapping_3 ... ok
+test solution_finders::base_finder::test_evo::conversion_tests::check_mapping_4 ... ok
+test solution_finders::base_finder::test_evo::conversion_tests::check_mapping_big_1 ... ok
+test solution_finders::base_finder::test_evo::conversion_tests::check_mapping_big_2 ... ok
+test solution_finders::gate_backtrack::tests::bitset::test_operations ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and::case_1::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and::case_2::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and::case_1::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and::case_2::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and::case_3::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and_equal::s1_1_Value__Zero::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and::case_3::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and_equal::s1_1_Value__Zero::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and_equal::s1_2_Value__Bot::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and_equal::s1_2_Value__Bot::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and_equal::s1_3_Value__One::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and_equal::s1_3_Value__One::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and_fail::case_1::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and_fail::case_1::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and_fail::case_2::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and_fail::case_2::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and_fail::case_3::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_double_assingment_and_fail::case_3::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_single_assingment_inp::case_1::s1_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_single_assingment_inp::case_1::s1_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_single_assingment_inp::case_1::s1_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::bitset::check_range ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_single_assingment_inp::case_2::s1_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_single_assingment_inp::case_2::s1_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_single_assingment_out::value_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_single_assingment_out::value_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_single_assingment_inp::case_2::s1_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::and::test_and_single_assingment_out::value_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_and_equal::s1_1_Value__Zero::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_and_equal::s1_1_Value__Zero::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_and_equal::s1_2_Value__Bot::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::bitset::check_valid ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_and_equal::s1_2_Value__Bot::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_and_equal::s1_3_Value__One::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_and_equal::s1_3_Value__One::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_and_fail::case_1::index_1_0 ... ok
+test gates::tests::errors::test_arities ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_and_fail::case_2::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_and_fail::case_2::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_and_fail::case_3::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_or::case_1::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_or::case_1::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_or::case_2::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_or::case_2::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_or::case_3::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_or::case_3::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_single_assingment_inp::index_1_0::starting_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_single_assingment_inp::index_1_0::starting_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_and_fail::case_1::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_double_assingment_and_fail::case_3::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_single_assingment_inp::index_1_0::starting_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_single_assingment_inp::index_2_1::starting_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_single_assingment_inp::index_2_1::starting_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_single_assingment_inp::index_2_1::starting_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_single_assingment_out::s_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_single_assingment_out::s_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nand::test_nand_single_assingment_out::s_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_and_equal::s1_1_Value__Zero::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_and_equal::s1_1_Value__Zero::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_and_equal::s1_2_Value__Bot::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_and_equal::s1_2_Value__Bot::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_and_equal::s1_3_Value__One::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_and_equal::s1_3_Value__One::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_and_fail::case_1::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_and_fail::case_1::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_and_fail::case_2::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_and_fail::case_3::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_or::case_1::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_or::case_1::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_or::case_2::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_or::case_2::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_or::case_3::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_or::case_3::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_and_fail::case_2::index_2_1 ... ok
+test solution_finders::base_finder::test_evo::fitness_tests::check_simple_case ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_double_assingment_and_fail::case_3::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_single_assingment_inp::index_1_0::starting_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_single_assingment_inp::index_1_0::starting_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_single_assingment_inp::index_1_0::starting_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_single_assingment_inp::index_2_1::starting_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_single_assingment_inp::index_2_1::starting_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_single_assingment_inp::index_2_1::starting_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_single_assingment_out::s_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_single_assingment_out::s_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::nor::test_nor_single_assingment_out::s_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_and_equal::s1_1_Value__Zero::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_and_equal::s1_1_Value__Zero::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_and_equal::s1_2_Value__Bot::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_and_equal::s1_2_Value__Bot::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_and_equal::s1_3_Value__One::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_and_equal::s1_3_Value__One::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_and_fail::case_1::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_and_fail::case_1::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_and_fail::case_2::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_and_fail::case_2::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_and_fail::case_3::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_and_fail::case_3::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_or::case_1::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_or::case_1::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_or::case_2::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_or::case_2::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_or::case_3::index_1_0 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_double_assingment_or::case_3::index_2_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_single_assingment_inp::index_1_0::starting_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_single_assingment_inp::index_1_0::starting_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_single_assingment_inp::index_1_0::starting_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_single_assingment_inp::index_2_1::starting_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_single_assingment_inp::index_2_1::starting_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_and_single_assingment_inp::index_2_1::starting_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_or_single_assingment_out::s_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_or_single_assingment_out::s_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::or::test_or_single_assingment_out::s_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_1_Value__Zero::s2_1_Value__Zero::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_1_Value__Zero::s2_1_Value__Zero::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_1_Value__Zero::s2_1_Value__Zero::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_1_Value__Zero::s2_1_Value__Zero::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_1_Value__Zero::s2_2_Value__Bot::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_1_Value__Zero::s2_2_Value__Bot::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_1_Value__Zero::s2_2_Value__Bot::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_1_Value__Zero::s2_2_Value__Bot::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_1_Value__Zero::s2_3_Value__One::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_1_Value__Zero::s2_3_Value__One::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_1_Value__Zero::s2_3_Value__One::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_1_Value__Zero::s2_3_Value__One::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_2_Value__Bot::s2_1_Value__Zero::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_2_Value__Bot::s2_1_Value__Zero::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_2_Value__Bot::s2_1_Value__Zero::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_2_Value__Bot::s2_1_Value__Zero::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_2_Value__Bot::s2_2_Value__Bot::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_2_Value__Bot::s2_2_Value__Bot::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_2_Value__Bot::s2_2_Value__Bot::gate_3_Gate__And ... ok
+test solution_finders::base_finder::test_evo::fitness_tests::check_complex_case ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_2_Value__Bot::s2_2_Value__Bot::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_2_Value__Bot::s2_3_Value__One::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_2_Value__Bot::s2_3_Value__One::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_2_Value__Bot::s2_3_Value__One::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_2_Value__Bot::s2_3_Value__One::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_3_Value__One::s2_1_Value__Zero::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_3_Value__One::s2_1_Value__Zero::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_3_Value__One::s2_1_Value__Zero::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_3_Value__One::s2_1_Value__Zero::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_3_Value__One::s2_2_Value__Bot::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_3_Value__One::s2_2_Value__Bot::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_3_Value__One::s2_2_Value__Bot::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_3_Value__One::s2_2_Value__Bot::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_3_Value__One::s2_3_Value__One::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_3_Value__One::s2_3_Value__One::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_3_Value__One::s2_3_Value__One::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_double_assingment_and_on_ins::s1_3_Value__One::s2_3_Value__One::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_1_Value__Zero::s3_1_Value__Zero::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_1_Value__Zero::s3_1_Value__Zero::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_1_Value__Zero::s3_1_Value__Zero::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_1_Value__Zero::s3_1_Value__Zero::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_1_Value__Zero::s3_2_Value__Bot::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_1_Value__Zero::s3_2_Value__Bot::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_1_Value__Zero::s3_2_Value__Bot::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_1_Value__Zero::s3_2_Value__Bot::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_1_Value__Zero::s3_3_Value__One::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_1_Value__Zero::s3_3_Value__One::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_1_Value__Zero::s3_3_Value__One::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_1_Value__Zero::s3_3_Value__One::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_2_Value__Bot::s3_1_Value__Zero::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_2_Value__Bot::s3_1_Value__Zero::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_2_Value__Bot::s3_1_Value__Zero::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_2_Value__Bot::s3_1_Value__Zero::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_2_Value__Bot::s3_2_Value__Bot::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_2_Value__Bot::s3_2_Value__Bot::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_2_Value__Bot::s3_2_Value__Bot::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_2_Value__Bot::s3_2_Value__Bot::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_2_Value__Bot::s3_3_Value__One::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_2_Value__Bot::s3_3_Value__One::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_2_Value__Bot::s3_3_Value__One::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_2_Value__Bot::s3_3_Value__One::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_3_Value__One::s3_1_Value__Zero::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_3_Value__One::s3_1_Value__Zero::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_3_Value__One::s3_1_Value__Zero::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_3_Value__One::s3_1_Value__Zero::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_3_Value__One::s3_2_Value__Bot::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_3_Value__One::s3_2_Value__Bot::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_3_Value__One::s3_2_Value__Bot::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_3_Value__One::s3_2_Value__Bot::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_3_Value__One::s3_3_Value__One::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_3_Value__One::s3_3_Value__One::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_3_Value__One::s3_3_Value__One::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_1_Value__Zero::s2_3_Value__One::s3_3_Value__One::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_1_Value__Zero::s3_1_Value__Zero::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_1_Value__Zero::s3_1_Value__Zero::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_1_Value__Zero::s3_1_Value__Zero::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_1_Value__Zero::s3_1_Value__Zero::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_1_Value__Zero::s3_2_Value__Bot::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_1_Value__Zero::s3_2_Value__Bot::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_1_Value__Zero::s3_2_Value__Bot::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_1_Value__Zero::s3_2_Value__Bot::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_1_Value__Zero::s3_3_Value__One::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_1_Value__Zero::s3_3_Value__One::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_1_Value__Zero::s3_3_Value__One::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_1_Value__Zero::s3_3_Value__One::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_2_Value__Bot::s3_1_Value__Zero::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_2_Value__Bot::s3_1_Value__Zero::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_2_Value__Bot::s3_1_Value__Zero::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_2_Value__Bot::s3_1_Value__Zero::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_2_Value__Bot::s3_2_Value__Bot::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_2_Value__Bot::s3_2_Value__Bot::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_2_Value__Bot::s3_2_Value__Bot::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_2_Value__Bot::s3_2_Value__Bot::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_2_Value__Bot::s3_3_Value__One::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_2_Value__Bot::s3_3_Value__One::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_2_Value__Bot::s3_3_Value__One::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_3_Value__One::s3_1_Value__Zero::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_2_Value__Bot::s3_3_Value__One::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_3_Value__One::s3_1_Value__Zero::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_3_Value__One::s3_1_Value__Zero::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_3_Value__One::s3_1_Value__Zero::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_3_Value__One::s3_2_Value__Bot::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_3_Value__One::s3_2_Value__Bot::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_3_Value__One::s3_2_Value__Bot::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_3_Value__One::s3_2_Value__Bot::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_3_Value__One::s3_3_Value__One::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_3_Value__One::s3_3_Value__One::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_3_Value__One::s3_3_Value__One::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_2_Value__Bot::s2_3_Value__One::s3_3_Value__One::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_1_Value__Zero::s3_1_Value__Zero::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_1_Value__Zero::s3_1_Value__Zero::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_1_Value__Zero::s3_1_Value__Zero::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_1_Value__Zero::s3_1_Value__Zero::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_1_Value__Zero::s3_2_Value__Bot::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_1_Value__Zero::s3_2_Value__Bot::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_1_Value__Zero::s3_2_Value__Bot::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_1_Value__Zero::s3_2_Value__Bot::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_1_Value__Zero::s3_3_Value__One::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_1_Value__Zero::s3_3_Value__One::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_1_Value__Zero::s3_3_Value__One::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_1_Value__Zero::s3_3_Value__One::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_2_Value__Bot::s3_1_Value__Zero::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_2_Value__Bot::s3_1_Value__Zero::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_2_Value__Bot::s3_1_Value__Zero::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_2_Value__Bot::s3_1_Value__Zero::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_2_Value__Bot::s3_2_Value__Bot::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_2_Value__Bot::s3_2_Value__Bot::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_2_Value__Bot::s3_2_Value__Bot::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_2_Value__Bot::s3_2_Value__Bot::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_2_Value__Bot::s3_3_Value__One::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_2_Value__Bot::s3_3_Value__One::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_2_Value__Bot::s3_3_Value__One::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_2_Value__Bot::s3_3_Value__One::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_3_Value__One::s3_1_Value__Zero::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_3_Value__One::s3_1_Value__Zero::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_3_Value__One::s3_1_Value__Zero::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_3_Value__One::s3_1_Value__Zero::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_3_Value__One::s3_2_Value__Bot::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_3_Value__One::s3_2_Value__Bot::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_3_Value__One::s3_2_Value__Bot::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_3_Value__One::s3_2_Value__Bot::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_3_Value__One::s3_3_Value__One::gate_1_Gate__Nor ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_3_Value__One::s3_3_Value__One::gate_2_Gate__Nand ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_3_Value__One::s3_3_Value__One::gate_3_Gate__And ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::test_and_triple_assingment::s1_3_Value__One::s2_3_Value__One::s3_3_Value__One::gate_4_Gate__Or ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_1_Value__Zero::b_1_Value__Zero::c_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_1_Value__Zero::b_1_Value__Zero::c_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_1_Value__Zero::b_1_Value__Zero::c_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_1_Value__Zero::b_2_Value__Bot::c_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_1_Value__Zero::b_2_Value__Bot::c_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_1_Value__Zero::b_2_Value__Bot::c_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_1_Value__Zero::b_3_Value__One::c_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_1_Value__Zero::b_3_Value__One::c_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_1_Value__Zero::b_3_Value__One::c_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_2_Value__Bot::b_1_Value__Zero::c_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_2_Value__Bot::b_1_Value__Zero::c_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_2_Value__Bot::b_1_Value__Zero::c_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_2_Value__Bot::b_2_Value__Bot::c_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_2_Value__Bot::b_2_Value__Bot::c_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_2_Value__Bot::b_2_Value__Bot::c_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_2_Value__Bot::b_3_Value__One::c_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_2_Value__Bot::b_3_Value__One::c_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_2_Value__Bot::b_3_Value__One::c_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_3_Value__One::b_1_Value__Zero::c_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_3_Value__One::b_1_Value__Zero::c_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_3_Value__One::b_1_Value__Zero::c_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_3_Value__One::b_2_Value__Bot::c_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_3_Value__One::b_2_Value__Bot::c_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_3_Value__One::b_3_Value__One::c_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_3_Value__One::b_2_Value__Bot::c_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_3_Value__One::b_3_Value__One::c_2_Value__Bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::all_triplets_value::a_3_Value__One::b_3_Value__One::c_3_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_in_out_valid_bot_should_fail::case_01 - should panic ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_in_out_valid_bot_should_fail::case_05 - should panic ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_in_out_valid_bot_should_fail::case_04 - should panic ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_in_out_valid_bot_should_fail::case_02 - should panic ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_in_out_valid_bot_should_fail::case_03 - should panic ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_in_out_valid_bot_should_fail::case_06 - should panic ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_in_out_valid_bot_should_fail::case_07 - should panic ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_in_out_valid_bot_should_fail::case_08 - should panic ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_in_out_valid_bot_should_pass ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_in_out_valid_bot_should_fail::case_10 - should panic ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_in_out_valid_bot_should_fail::case_09 - should panic ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_out_valid_bot_should_pass::case_1 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_out_valid_bot_should_pass::case_3 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_out_valid_bot_should_pass::case_2 ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_out_valid_pure::val_2_Value__One ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_out_valid_pure::val_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_out_valid_pure_should_fail::case_3 - should panic ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_out_valid_pure_should_fail::case_1 - should panic ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_out_valid_pure_should_fail::case_2 - should panic ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::double_out_valid_pure_should_fail::case_4 - should panic ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::output_left_purify ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::output_right_purify ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::single_input_bot ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::single_input_pure::inp_1_Value__Zero ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::single_input_pure::inp_2_Value__One ... ok
+test graph::tests::edge_tests::check_bad_nodes ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::uniary::test_not ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::uniary::test_copy ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::purify::preserves_purify ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::uniary::preserves_unary ... ok
+test solution_finders::gate_backtrack::tests::gate_evals::binary::preserves_binary ... ok
+test graph::tests::edge_tests::check_invalid_edges ... ok
+test solution_finders::base_finder::test_evo::conversion_tests::to_chromosone_alignment ... ok
+test graph::tests::node_tests::add_value_node ... ok
+
+test result: ok. 345 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.16s
+
+   Doc-tests macro_export
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests misc_lib
+
+running 1 test
+test misc-lib/src/lib.rs - EnumCycle (line 4) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+
+   Doc-tests pure_circuit_lib
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

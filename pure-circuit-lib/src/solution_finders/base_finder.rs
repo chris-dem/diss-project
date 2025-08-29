@@ -52,18 +52,6 @@ impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
         Some(())
     }
 
-    // fn get_conn_components(&self) -> Vec<usize> {
-    //     let mut node_sets = UnionFind::new(self.graph.node_bound());
-    //     for edge in self.graph.edge_references() {
-    //         let (a, b) = (edge.source(), edge.target());
-
-    //         // union the two nodes of the edge
-    //         node_sets.union(self.graph.to_index(a), self.graph.to_index(b));
-    //     }
-
-    //     node_sets.into_labeling()
-    // }
-
     pub fn to_fitness_function(&self) -> Option<FitnessPureCircuit> {
         let map = self
             .graph
