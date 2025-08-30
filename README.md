@@ -78,3 +78,6 @@ Main UI implementation. Library used `Bevy`.
 We refer to the bevy documentation for more information how it works.
 List of components:
 
+## Test outputs
+
+We provide a full exert of our test results in `test-output.log`

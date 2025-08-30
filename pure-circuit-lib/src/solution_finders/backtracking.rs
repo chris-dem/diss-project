@@ -13,8 +13,12 @@ use strum::IntoEnumIterator;
 
 pub struct BacktrackAlgorithm;
 
+/// BitString data structure
+/// Specialised dataset for dealing with the Kleene values where we express it as a tuple of three boolean
+/// (bool for Zero, bool for Bot, bool for One)
+/// The library contains an extensive API for any possible set operation
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub(crate) struct BitString(pub(crate) bool, pub(crate) bool, pub(crate) bool);
+pub struct BitString(pub(crate) bool, pub(crate) bool, pub(crate) bool);
 
 impl Debug for BitString {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -50,11 +54,46 @@ impl From<Value> for BitString {
 }
 
 impl BitString {
-    pub(crate) fn len(self) -> usize {
+    /// Number of elements in the set
+    /// # Example
+    /// ```
+    /// use pure_circuit_lib::solution_finders::backtracking::BitString;
+    /// use pure_circuit_lib::gates::Value;
+    /// let set = BitString::all();
+    /// assert_eq!(set.len(), 3);
+    /// let set = BitString::all().remove(Value::One);
+    /// assert_eq!(set.len(), 2);
+    /// let set = BitString::default();
+    /// assert_eq!(set.len(), 0);
+    /// ```
+    pub fn len(self) -> usize {
         self.0 as usize + self.1 as usize + self.2 as usize
     }
+    /// Check if set is empty
+    /// # Example
+    /// ```
+    /// use pure_circuit_lib::solution_finders::backtracking::BitString;
+    /// use pure_circuit_lib::gates::Value;
+    /// let set = BitString::all();
+    /// assert!(!set.is_empty());
+    /// let set = BitString::default();
+    /// assert!(set.is_empty());
+    /// ```
+    pub fn is_empty(self) -> bool {
+        self.len() == 0
+    }
 
-    pub(crate) fn to_value_iter(self) -> impl Iterator<Item = Value> {
+    /// Create an iterator of the elements
+    /// # Example
+    /// ```
+    /// use pure_circuit_lib::solution_finders::backtracking::BitString;
+    /// use pure_circuit_lib::gates::Value;
+    /// let val_iter = BitString::all().to_value_iter().collect::<Vec<_>>();
+    /// assert_eq!(val_iter, vec![Value::Zero, Value::Bot, Value::One]);
+    /// let val_iter = BitString::all().remove(Value::Bot).to_value_iter().collect::<Vec<_>>();
+    /// assert_eq!(val_iter, vec![Value::Zero,  Value::One]);
+    /// ```
+    pub fn to_value_iter(self) -> impl Iterator<Item = Value> {
         let mut ret = Vec::with_capacity(3);
         if self.0 {
             ret.push(Value::Zero);
@@ -67,9 +106,20 @@ impl BitString {
         }
         ret.into_iter()
     }
-    pub(crate) fn all() -> Self {
+
+    /// Create a set with all elements
+    /// # Example
+    /// ```
+    /// use pure_circuit_lib::solution_finders::backtracking::BitString;
+    /// use pure_circuit_lib::gates::Value;
+    /// let set_one = BitString::default().insert(Value::Zero).insert(Value::One).insert(Value::Bot);
+    /// let set_two = BitString::all();
+    /// assert_eq!(set_one, set_two);
+    /// ```
+    pub fn all() -> Self {
         Self(true, true, true)
     }
+
     fn into_values(self) -> Vec<Value> {
         [
             if self.0 { Some(Value::Zero) } else { None },
@@ -81,42 +131,121 @@ impl BitString {
         .collect_vec()
     }
 
+    /// Union between two sets
+    /// # Example
+    /// ```
+    /// use pure_circuit_lib::solution_finders::backtracking::BitString;
+    /// use pure_circuit_lib::gates::Value;
+    /// let set_one = BitString::default().insert(Value::Zero);
+    /// let set_two = BitString::default().insert(Value::One);
+    /// let set_three = BitString::all().remove(Value::Bot);
+    /// assert_eq!(set_one.op_union(set_two), set_three);
+    /// ```
     pub fn op_union(self, other: Self) -> Self {
         Self(self.0 || other.0, self.1 || other.1, self.2 || other.2)
     }
 
+    /// Intersection between two sets
+    /// # Example
+    /// ```
+    /// use pure_circuit_lib::solution_finders::backtracking::BitString;
+    /// use pure_circuit_lib::gates::Value;
+    /// let set_one = BitString::all().remove(Value::Zero);
+    /// let set_two = BitString::all().remove(Value::One);
+    /// let set_three = BitString::default().insert(Value::Bot);
+    /// assert_eq!(set_one.op_inter(set_two), set_three);
+    /// ```
     pub fn op_inter(self, other: Self) -> Self {
         Self(self.0 && other.0, self.1 && other.1, self.2 && other.2)
     }
 
-    pub fn add(self, value: Value) -> Self {
+    /// Insert element into the set
+    pub fn insert(self, value: Value) -> Self {
         self.op_union(BitString::from(value))
     }
 
+    /// Invert all elements of a set
+    /// # Example
+    /// ```
+    /// use pure_circuit_lib::solution_finders::backtracking::BitString;
+    /// use pure_circuit_lib::gates::Value;
+    /// let set_one = BitString::default().insert(Value::Zero);
+    /// let set_two = BitString::all().remove(Value::Zero);
+    /// assert_eq!(set_one.reverse(), set_two);
+    /// ```
     pub fn reverse(self) -> Self {
         Self(!self.0, !self.1, !self.2)
     }
 
+    /// Flip between 0 and 1
+    /// # Example
+    /// ```
+    /// use pure_circuit_lib::solution_finders::backtracking::BitString;
+    /// use pure_circuit_lib::gates::Value;
+    /// let set_one = BitString::default().insert(Value::Zero);
+    /// let set_two = BitString::default().insert(Value::One);
+    /// assert_eq!(set_one.flip(), set_two);
+    /// let set_one = BitString::default().insert(Value::Bot).insert(Value::Zero);
+    /// let set_two = BitString::default().insert(Value::Bot).insert(Value::One);
+    /// assert_eq!(set_one.flip(), set_two);
+    /// ```
     pub fn flip(self) -> Self {
         Self(self.2, self.1, self.0)
     }
 
+    /// Remove ellement from set
     pub fn remove(self, value: Value) -> Self {
         self.op_inter(BitString::from(value).reverse())
     }
-
+    /// Insert all elements smaller or equal than the input
+    /// # Example
+    /// ```
+    /// use pure_circuit_lib::solution_finders::backtracking::BitString;
+    /// use pure_circuit_lib::gates::Value;
+    /// let set_one = BitString::smaller_than(Value::Zero);
+    /// let set_two = BitString::default().insert(Value::Zero);
+    /// assert_eq!(set_one, set_two);
+    /// let set_one = BitString::smaller_than(Value::Bot);
+    /// let set_two = BitString::default().insert(Value::Zero).insert(Value::Bot);
+    /// assert_eq!(set_one, set_two);
+    /// let set_one = BitString::smaller_than(Value::One);
+    /// let set_two = BitString::all();
+    /// assert_eq!(set_one, set_two);
+    /// ```
     pub fn smaller_than(value: Value) -> Self {
         Value::iter()
             .filter(|x| VoltageOrdering(*x) <= VoltageOrdering(value))
-            .fold(BitString::default(), |acc, x| acc.add(x))
+            .fold(BitString::default(), |acc, x| acc.insert(x))
     }
 
+    /// Insert all elements greater or equal than the input
+    /// # Example
+    /// ```
+    /// use pure_circuit_lib::solution_finders::backtracking::BitString;
+    /// use pure_circuit_lib::gates::Value;
+    /// let set_one = BitString::smaller_than(Value::Zero);
+    /// let set_two = BitString::default().insert(Value::Zero);
+    /// assert_eq!(set_one, set_two);
+    /// let set_one = BitString::smaller_than(Value::Bot);
+    /// let set_two = BitString::default().insert(Value::Zero).insert(Value::Bot);
+    /// assert_eq!(set_one, set_two);
+    /// let set_one = BitString::smaller_than(Value::One);
+    /// let set_two = BitString::all();
+    /// assert_eq!(set_one, set_two);
+    /// ```
     pub fn greater_than(value: Value) -> Self {
-        Self::smaller_than(value).reverse().add(value)
+        Self::smaller_than(value).reverse().insert(value)
     }
 }
 
 impl<T: Copy, G: Copy> PureCircuitGraph<T, G> {
+    /// Extarct solution from assignment set
+    /// # Parameters
+    /// * v: Set of optional value arguments
+    /// # Returns
+    /// Unit if the extraction was successful otherwise the function yields an error.
+    /// # Errors
+    /// * If the array is missing the index or the value has not been assigned
     pub fn from_backtrack_sol(&mut self, v: &[Option<Value>]) -> ARes<()> {
         for n in self.graph.node_indices().collect_vec() {
             if self
@@ -137,6 +266,18 @@ impl<T: Copy, G: Copy> PureCircuitGraph<T, G> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Priority Queue Key Structure
+/// Contains the:
+/// * Number of remaining values
+/// * Does it have an in-degree of 0
+/// * The number of its neighbours
+///
+/// We enforce ordering such that:
+/// * In descending on remaining values
+/// * In ascending on in-degree = 0
+/// * In ascending on number of neighbours
+/// 
+/// Since the PQ is max-based, will always prio few remaining, with in-degree = 0, and high neighbour count
 struct BacktrackKey {
     value_len: usize,
     is_start: bool,
@@ -144,17 +285,18 @@ struct BacktrackKey {
 }
 
 impl PartialOrd for BacktrackKey {
+    #[allow(clippy::non_canonical_partial_ord_impl)]
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(
             (
-                other.value_len as isize,
-                other.is_start as usize,
-                other.neighbours,
+                -(self.value_len as isize),
+                self.is_start as usize,
+                self.neighbours,
             )
                 .cmp(&(
-                    self.value_len as isize,
-                    self.is_start as usize,
-                    self.neighbours,
+                    -(other.value_len as isize),
+                    other.is_start as usize,
+                    other.neighbours,
                 )),
         )
     }
@@ -169,6 +311,10 @@ impl Ord for BacktrackKey {
 type BacktrackPQ = PriorityQueue<NodeIndex, BacktrackKey>;
 
 impl<T, G> PureCircuitGraph<T, G> {
+    /// Create a sparse vector such that each index denotes empty or a tuple with the:
+    /// * NodeIndex
+    /// * Whether its a start node
+    /// * Neighbour size
     fn extract_node_graph(&self) -> Vec<Option<(NodeIndex, bool, usize)>> {
         let v = self
             .graph
@@ -203,6 +349,10 @@ impl<T, G> PureCircuitGraph<T, G> {
 }
 
 impl BacktrackAlgorithm {
+    /// Apply the backtracking algorithm
+    /// # Return
+    /// Ok(*): Vector of all assignments
+    /// Err(*): Errors on invalid indexes or transformations
     pub fn calculate<T, G>(
         &self,
         pc_instance: &PureCircuitGraph<T, G>,

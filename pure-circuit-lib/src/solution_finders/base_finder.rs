@@ -20,6 +20,18 @@ pub struct FitnessPureCircuit(Box<[Inner]>);
 
 impl Allele for Value {}
 impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
+    /// Convert graph to an array of values
+    /// # Example
+    /// ```
+    /// use pure_circuit_lib::graph::PureCircuitGraph;
+    /// use pure_circuit_lib::gates::{NodeUnitialised, Value};
+    ///
+    /// let mut pc  = PureCircuitGraph::<(),()>::default();
+    /// pc.add_node(NodeUnitialised::from_value(Value::Bot), ());
+    /// pc.add_node(NodeUnitialised::from_value(Value::Bot), ());
+    /// let arr = pc.to_chromosone().into_iter().collect::<Vec<_>>();
+    /// assert_eq!(arr, vec![Value::Bot, Value::Bot]);
+    /// ```
     pub fn to_chromosone(&self) -> Box<[Value]> {
         self.graph
             .node_weights()
@@ -30,6 +42,7 @@ impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
             .collect()
     }
 
+    /// Extract the values from a chromosome
     pub fn from_chromosone(&mut self, chromosome: &[Value]) -> Option<()> {
         for e in self
             .graph
@@ -52,6 +65,12 @@ impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
         Some(())
     }
 
+    /// Create a fitness function with respect to the gates
+    /// Each gate is associated with a set of indices that correspond
+    /// to the position of its neighbours with respect to the chromosome.
+    /// # Returns
+    /// * None: Exist node with invalid arity
+    /// * Some(*): Fitness function instance
     pub fn to_fitness_function(&self) -> Option<FitnessPureCircuit> {
         let map = self
             .graph
@@ -123,6 +142,12 @@ impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
 }
 
 impl FitnessPureCircuit {
+
+    /// Fitness function. Given a slice of values,
+    /// measure the number of gates that are not satisfied
+    /// # Returns
+    /// * None: Exists node with invalid arity
+    /// * Some(*): Number of missmatched gates
     pub fn evaluate(&self, inputs: &[Value]) -> Option<usize> {
         let mut errors = 0usize;
         let t = inputs;

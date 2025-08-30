@@ -300,17 +300,17 @@ mod tests {
         fn test_operations() {
             assert_eq!(
                 BitString::all(),
-                BitString::from(Value::One).add(Value::Zero).add(Value::Bot)
+                BitString::from(Value::One).insert(Value::Zero).insert(Value::Bot)
             );
 
             assert_eq!(
                 BitString::from(Value::One),
-                BitString::from(Value::One).add(Value::One).add(Value::One)
+                BitString::from(Value::One).insert(Value::One).insert(Value::One)
             );
 
             assert_eq!(
                 BitString::all().remove(Value::Bot),
-                BitString::from(Value::One).add(Value::Zero)
+                BitString::from(Value::One).insert(Value::Zero)
             );
             assert_eq!(
                 BitString::all()
@@ -320,8 +320,8 @@ mod tests {
             );
             assert_eq!(
                 BitString::default()
-                    .add(Value::One)
-                    .op_union(BitString::default().add(Value::Zero)),
+                    .insert(Value::One)
+                    .op_union(BitString::default().insert(Value::Zero)),
                 BitString::all().remove(Value::Bot),
             )
         }
