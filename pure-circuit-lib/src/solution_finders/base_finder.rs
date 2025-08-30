@@ -61,7 +61,6 @@ impl<T: Debug + Copy, G: Debug + Copy> PureCircuitGraph<T, G> {
                 _ => return None,
             };
         }
-        dbg!(&self.graph);
         Some(())
     }
 

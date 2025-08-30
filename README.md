@@ -68,7 +68,8 @@ We expand more on its API on files `pure-circuit-lib::graph`
 
 * `backtracking`: Backtracking algorithm implementation
 * `evo_search`: Meta-heuristic algorithm implementations
-* `base_finder`: PureCircuit API extension for fitness evaluation
+  * Implementation of the Hill Climbing and the Genetic Algorithm
+* `base_finder`: `PureCircuit` API extension for fitness evaluation
 * `gate_backtrack`: Set simplification implementation and testing
 * `solver_trait`: Trait for the solution finders
 

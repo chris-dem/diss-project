@@ -31,23 +31,27 @@ impl Fitness for FitnessPureCircuit {
 }
 
 #[derive(Debug, Clone, Copy, Default)]
+/// Proxy type that holds any solver data
 pub struct SolverStruct<T> {
     phantom_data: PhantomData<T>,
 }
 
 #[derive(Debug)]
+/// Type that holds the solution of our metaheuristic algorithm
 pub struct SolutionReturn {
     pub chromosone: Vec<Value>,
     pub errors: usize,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
+/// Proxy type for evolutionarly algorithms that stores any fitness type
 pub struct EvolutionaryAlgorithm<G: Fitness> {
     phantom_data: PhantomData<G>,
 }
 pub type SolverEvo = SolverStruct<EvolutionaryAlgorithm<FitnessPureCircuit>>;
 
 #[derive(Debug, Clone, Copy, Default)]
+/// Proxy type for hill climbing algorithms that stores any fitness type
 pub struct HillClimbAlgorithm<G: Fitness> {
     phantom_data: PhantomData<G>,
 }
@@ -140,6 +144,7 @@ impl PartialEq for NewType<MutateWrapper> {
 impl Eq for NewType<MutateWrapper> {}
 
 #[derive(Debug, Clone)]
+/// Parameter set of the evolutionary algorithm type
 pub struct EvoParamSet<T> {
     pub param_type: T,
     pub gene_hashing: bool,
@@ -197,6 +202,7 @@ impl<G: Fitness<Genotype = ListGenotype<Value>>> SolverTrait
 
     type Solution = SolutionReturn;
 
+    // Genetic algorithm setup and execution
     fn find_solution(&self, param_set: Self::ParamSet) -> ARes<Self::Solution> {
         let genotype = ListGenotype::builder()
             .with_allele_list(Value::iter().collect_vec())
@@ -256,6 +262,7 @@ impl<T: Fitness<Genotype = ListGenotype<Value>>> Instance<T> {
 pub struct Build;
 
 #[derive(Clone, Debug, Copy)]
+/// Parameter set of the hill climbing algorithm
 pub struct HillParamSet<T> {
     pub param_type: T,
     pub gene_hashing: bool,
@@ -307,6 +314,7 @@ impl<G: Fitness<Genotype = ListGenotype<Value>>> SolverTrait
 
     type Solution = SolutionReturn;
 
+    // Hill Climbing algorithm setup and execution
     fn find_solution(&self, param_set: Self::ParamSet) -> ARes<Self::Solution> {
         let genotype = ListGenotype::builder()
             .with_allele_list(Value::iter().collect_vec())

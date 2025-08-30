@@ -207,6 +207,9 @@ fn hill_climb_ui(
         ui.label("Number of runs:");
         ui.add(egui::DragValue::new(&mut hill_params.0.num_of_runs).range(1..=50usize));
         ui.end_row();
+        ui.label("With parallelisation:");
+        ui.checkbox(&mut hill_params.0.with_parallel,"");
+        ui.end_row();
         ui.label("Population Size size:");
         ui.add(egui::DragValue::new(&mut hill_params.0.population_size).range(10..=500usize));
         ui.end_row();

@@ -527,7 +527,6 @@ impl BacktrackAlgorithm {
         queue: &mut BacktrackPQ,
         value_map: &mut [Option<BitString>],
     ) -> ARes<()> {
-        // dbg!(&value_map, &queue, &indx, &new_set);
         if value_map[indx].is_none() {
             return Err(anyhow!("Value mapping"));
         }

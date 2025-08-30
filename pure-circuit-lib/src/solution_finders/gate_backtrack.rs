@@ -12,6 +12,12 @@ type BitStringIOState = (
 );
 
 impl Gate {
+    /// Set simplification operator
+    /// # Parameters
+    /// Conditional assigned inputs and outputs
+    /// # Output
+    /// Ok(.) => Tuple of the valid input/output sets for the remaining values
+    /// Err(.) => Invalid assignments
     pub(crate) fn set_value(
         &self,
         assingment_input: [Option<Value>; MAX_DEGREE],
