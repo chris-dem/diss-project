@@ -42,6 +42,7 @@ impl Plugin for BacktrackPlugin {
     }
 }
 
+/// Event handler for executing the backtracking algorithm
 pub(super) fn execute_backtrack_handler(
     mut event_back: EventReader<BacktrackEvent>,
     mut sol_set: ResMut<SolutionSet>,
@@ -75,6 +76,7 @@ pub(super) fn execute_backtrack_handler(
     }
 }
 
+/// Event handler for enumerating through found solutions
 fn modify_index(
     sol_index: Res<SolutionIndex>,
     sol_set: Res<SolutionSet>,

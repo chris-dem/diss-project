@@ -3,7 +3,7 @@ use std::fmt::Display;
 use crate::{
     constants::{D_RADIUS, LINE_STROKE},
     state_management::{
-        events::NodeStatusUpdate, mouse_state::EdgeManagementState,
+        events::NodeStatusUpdate, 
         node_addition_state::ValueComponent, state_init::PureCircuitResource,
     },
 };
@@ -28,6 +28,22 @@ pub enum EdgeState {
     SelectedNode,
 }
 
+
+#[derive(Debug, Clone, Copy, Default, States, PartialEq, Eq, Hash, EnumCycle)]
+pub enum EdgeManagementState {
+    #[default]
+    AddEdge,
+    RemoveEdges,
+}
+
+impl Display for EdgeManagementState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::AddEdge => write!(f, "Add Edge"),
+            Self::RemoveEdges => write!(f, "Remove Edge"),
+        }
+    }
+}
 impl EnumCycle for EdgeState {
     fn toggle(&self) -> Self {
         match self {
@@ -97,6 +113,7 @@ fn edge_management_toggle(
     next_state.set(state.get().toggle());
 }
 
+/// Render function to highlight source node
 fn highlight_source_node(
     pc_resource: Res<PureCircuitResource>,
     selected_node_mode: Res<SelectedNodeMode>,
@@ -116,6 +133,7 @@ fn highlight_source_node(
     gizmos.circle_2d(trans.translation.xy(), D_RADIUS + 0.5, LIGHT_BLUE);
 }
 
+/// Highlight valid target nodes
 fn highlight_possible_nodes(
     selected_node_mode: Res<SelectedNodeMode>,
     edge_management_substate: Res<State<EdgeManagementState>>,
@@ -184,16 +202,19 @@ fn highlight_possible_nodes(
     }
 }
 
+/// Reset to the default edge state 
 fn reset_edge_mode(mut next_state: ResMut<NextState<EdgeState>>, mut sel: ResMut<SelectedNodeMode>) {
     sel.0 = None;
     next_state.set(EdgeState::DefaultState);
 }
 
+/// Configure line width for the deges
 fn setup(mut config_store: ResMut<GizmoConfigStore>) {
     let (config, _) = config_store.config_mut::<DefaultGizmoConfigGroup>();
     config.line.width = 5.;
 }
 
+/// Enable the edge detection systems
 fn add_edge_detection(
     query: Query<EntityRef, With<ValueComponent>>,
     mut observer_resource: ResMut<ObserverResource>,
@@ -239,6 +260,7 @@ fn add_text<T: Display>(src: Vec2, dest: Vec2, val: T, text_font: TextFont) -> i
 #[derive(Debug, Clone, Copy, Component)]
 pub struct EdgeLabel;
 
+/// Modify the edge label such that it stays in the middle of the edge while we move the source or target nodes
 #[allow(clippy::type_complexity)]
 fn on_transition(
     query_moved_circles: Query<
@@ -318,6 +340,8 @@ fn on_transition(
     }
 }
 
+/// Click system based on the current system. If we havent selected a node, select a node. If we already did and the target
+/// is a valid target, create the edge 
 #[allow(clippy::too_many_arguments)]
 fn on_click(
     trigger: Trigger<Pointer<Click>>,
@@ -437,6 +461,7 @@ fn on_click(
     };
 }
 
+/// Disable edge detection systems
 fn remove_edge_detection(mut observer_resource: ResMut<ObserverResource>, mut commands: Commands) {
     if let Some(obs) = observer_resource.0.take() {
         commands.entity(obs).despawn();

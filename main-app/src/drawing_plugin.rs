@@ -63,6 +63,8 @@ impl Plugin for DrawingPlugin {
     }
 }
 
+/// Highlight all gate entities that are not valid.
+/// Choose appropriate colour dependign on their error value
 fn highlight_error_values(
     query: Query<(Entity, &Children, &GateStatusComponent), Changed<GateStatusComponent>>,
     query_err: Query<Entity, With<ErrorCircle>>,
@@ -104,6 +106,7 @@ fn spawn_error_circle(status: GateStatus) -> impl Bundle {
     )
 }
 
+/// Highlight nodes when you hover them
 fn hover_draw(
     mouse_resource: Res<MousePositions>,
     gate_mode: Res<State<GateMode>>,
@@ -119,6 +122,7 @@ fn hover_draw(
     gizmos.circle_2d(world_pos, D_RADIUS, col);
 }
 
+/// System responsible for spawning nodes
 #[allow(clippy::too_many_arguments)]
 fn click_draw(
     mouse_resource: Res<MousePositions>,
@@ -179,6 +183,7 @@ fn click_draw(
         .observe(on_hover_exit);
 }
 
+/// System responsible for toggling node values
 #[allow(clippy::too_many_arguments)]
 fn on_click(
     trigger: Trigger<Pointer<Click>>,
@@ -236,6 +241,7 @@ fn on_click(
 #[derive(Debug, Clone, Resource, Default, PartialEq, Eq)]
 struct HoveredNode(Option<Entity>);
 
+/// Spawn appropriate assets depending on the new node
 pub(crate) fn value_spawner(
     parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
     value: NodeUnitialised,
@@ -276,6 +282,7 @@ pub(crate) fn value_spawner(
     }
 }
 
+/// System responsible to handle node dragging. Allow us to drag nodes around the screen
 fn on_drag(
     trigger: Trigger<Pointer<Drag>>,
     mouse_state: Res<State<MouseState>>,
@@ -292,6 +299,7 @@ fn on_drag(
     }
 }
 
+/// System responsible to delete nodes when we hover over them and press delete
 fn on_hover_del(
     key: Res<ButtonInput<KeyCode>>,
     query_indx: Query<&ValueComponent>,
@@ -337,6 +345,7 @@ fn on_hover_del(
         event_sol_writer.write_default();
     }
 }
+
 
 fn on_hover_enter(
     trigger: Trigger<Pointer<Over>>,

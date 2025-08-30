@@ -18,6 +18,12 @@ To download all the necessary libraries and build the project
 cargo build
 ```
 
+Since we are using `Bevy`, additional
+installations may be needed such as build tools.
+Please refer to the website
+[https://bevy.org/learn/quick-start/getting-started/setup/](https://bevy.org/learn/quick-start/getting-started/setup/)
+for further installation instructions, in case you are facing GPU issues.  
+
 To run the tests run the command
 
 ```bash
@@ -29,6 +35,7 @@ To run on release mode
 ```bash
 cargo run --release
 ```
+
 
 ## Tooling used
 
@@ -77,7 +84,28 @@ We expand more on its API on files `pure-circuit-lib::graph`
 
 Main UI implementation. Library used `Bevy`.
 We refer to the bevy documentation for more information how it works.
-List of components:
+List of important files:
+
+* `ui_plugin`: File for the setup and rendering of the `UI` window
+* `main`: Main file that connects all plugins and components. Responsible for running the application.
+* `drawing_plugin`: Responsible for the rendering and interaction between graph nodes
+* `camera_plugin`: Spawns the camera and handles camera movement such as panning and moving around
+* `assets`: Contain the SVG paths for rendering the value nodes
+* `state_management`
+  * `mouse_state`: Contains the states for mouse management such as `node/edge` modes. Moreover, addition of current mouse position resource
+  * `state_init`: Responsible for initialising all essential resources and states of the application.
+  * `edge_management`: Responsible initialising the states and handling the edge addition/removal operations.
+  * `events`: Initialisation of all events of the application. Set of events that we use:
+    * `NodeUpdate`: Re-render the current node and notify the status of all localised gates
+    * `NodeStatusUpdate`: Update the status of the gate by re-rendering or removing error circles
+    * `ButtonEvoEvent`: Run the `Genetic Algorithm` algorithm
+    * `ButtonHillEvent`: Run the `Hill Climbing` algorithm
+    * `BacktrackEvent`: Run the `Backtracking` algorithm
+    * `SolutionReset`: When the current topology of the circuit changes, reset the solution set
+    * `IndexReset`: When the current state of the circuit changes, reset the selected solution index
+* `algo_execution`
+  * `back`: Responsible for importing and running the backtracking algorithm
+  * `plugin`: Responsible for importing and running the meta-heuristic algorithms
 
 ## Test outputs
 

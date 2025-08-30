@@ -54,8 +54,10 @@ impl Plugin for AlgoPlugin {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Resource, Default)]
+/// Resource to prevent multiple algorithms for running
 pub struct IsAlgoCurrentlyRunning(pub bool);
 
+/// Event handler for executing the hill climbing algorihtm 
 #[allow(clippy::too_many_arguments)]
 fn execute_hill_climbing(
     hill_params: Res<HillParam>,
@@ -115,6 +117,7 @@ fn execute_hill_climbing(
     }
 }
 
+/// Event handler for executing the genetic algorithm algorihtm 
 #[allow(clippy::too_many_arguments)]
 fn execute_evo_climbing(
     evo_params: Res<EvoParam>,
@@ -134,7 +137,7 @@ fn execute_evo_climbing(
                 "Unable to create fitness function. Check if there are any invalid arity gates",
             );
             algo_handle.0 = false;
-            return;
+            continue;
         };
         let count = pc_resource.0.count_values();
         let param_set = evo_params

@@ -1,7 +1,7 @@
 use crate::algo_execution::back::{SolutionIndex, SolutionSet};
 use crate::algo_execution::plugin::{ErrorMessage, EvoParam, HillParam, IsAlgoCurrentlyRunning};
+use crate::state_management::edge_management::EdgeManagementState;
 use crate::state_management::events::{BacktrackEvent, ButtonEvoEvent, ButtonHillEvent};
-use crate::state_management::mouse_state::EdgeManagementState;
 use crate::state_management::node_addition_state::{GateMode, ValueState};
 use crate::state_management::state_init::PureCircuitResource;
 use crate::{misc::cycle_enum_state, state_management::mouse_state::MouseState};

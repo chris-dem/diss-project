@@ -1,8 +1,7 @@
 use crate::{
     misc::cycle_enum_state,
     state_management::{
-        events::EventManagerPlugin, mouse_state::EdgeManagementState,
-        node_addition_state::ValueState,
+        edge_management::EdgeManagementState, events::EventManagerPlugin, node_addition_state::ValueState
     },
 };
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
