@@ -36,9 +36,6 @@ To run on release mode
 cargo run --release
 ```
 
-
-## Tooling used
-
 ## Workspaces
 
 ### `macro-export` & `misc-lib`
