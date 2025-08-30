@@ -144,6 +144,7 @@ impl<T: Copy, G: Copy> PureCircuitGraph<T, G> {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn add_nodes(
         &mut self,
         nodes: impl Iterator<Item = (NodeValue<NewNode>, T)>,

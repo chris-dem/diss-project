@@ -8,7 +8,6 @@ use genetic_algorithm::{
     mutate, select,
     strategy::{
         evolve::prelude::*,
-        hill_climb,
         prelude::{HillClimb, HillClimbVariant},
     },
 };
