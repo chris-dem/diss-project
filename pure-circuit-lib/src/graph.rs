@@ -220,6 +220,7 @@ impl<T: Copy, G: Copy> PureCircuitGraph<T, G> {
         )
     }
 
+    /// Get neighbours of current index given the direction.
     #[inline]
     pub(crate) fn get_neigh(
         &self,

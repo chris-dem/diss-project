@@ -129,6 +129,9 @@ impl Gate {
         in_vals.len() == ins && out_vals.len() == outs
     }
 
+    /// Apply gate based on input values
+    /// Error if we are applying on purify since it is a non-deterministic gate
+    /// Error if the arity of thegate is not satisfied
     pub(crate) fn apply(self, in_vals: &[Value]) -> Result<Value, GateError> {
         if in_vals.len() != self.arity().0 && self.arity().1 > 1 {
             return Err(GateError::ArityError);
@@ -151,6 +154,8 @@ impl Gate {
         }
     }
 
+    /// Check if the gate is satisfied
+    /// Return arity error if the arities are not satisfied
     pub fn check(&self, in_vals: &[Value], out_vals: &[Value]) -> Result<bool, GateError> {
         if !self.check_arity(in_vals, out_vals) {
             Err(GateError::ArityError)
@@ -200,6 +205,7 @@ pub enum NodeValue<I: NodeStateTrait> {
 }
 
 impl<T: NodeStateTrait> NodeValue<T> {
+    /// Compare gate nodes with value nodes
     pub fn compare_types<I: NodeStateTrait>(&self, other: NodeValue<I>) -> bool {
         matches!(
             (self, other),

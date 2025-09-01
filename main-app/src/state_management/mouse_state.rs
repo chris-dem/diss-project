@@ -24,6 +24,7 @@ impl Display for MouseState {
 #[derive(Resource, Clone, Copy, Debug, Default)]
 pub struct MousePositions(pub Option<Vec2>);
 
+/// Capture mouse position
 pub fn update_mouse_resource(
     camera_query: Single<(&Camera, &GlobalTransform)>,
     window: Query<&Window>,

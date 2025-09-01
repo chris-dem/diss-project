@@ -47,6 +47,7 @@ impl Plugin for EventManagerPlugin {
     }
 }
 
+/// Update status of gate with correct error circle or remove error circles if valid
 pub fn manage_node_update_status(
     pc_resource: Res<PureCircuitResource>,
     mut event_reader: EventReader<NodeStatusUpdate>,
@@ -69,6 +70,7 @@ pub fn manage_node_update_status(
     }
 }
 
+/// Update value of node
 pub fn manage_node_update(
     pc_resource: Res<PureCircuitResource>,
     mut event_reader: EventReader<NodeUpdate>,
@@ -105,6 +107,7 @@ pub fn manage_node_update(
     }
 }
 
+/// Reset solutions
 pub fn manage_solution_reset(
     mut event_reader: EventReader<SolutionReset>,
     mut sol_indx: ResMut<SolutionIndex>,
@@ -116,6 +119,7 @@ pub fn manage_solution_reset(
     }
 }
 
+/// Reset solution index
 pub fn index_reset(mut event_reader: EventReader<IndexReset>, mut sol_indx: ResMut<SolutionIndex>) {
     for _ in event_reader.read() {
         if let Some(v) = &mut sol_indx.0 {

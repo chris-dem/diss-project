@@ -14,7 +14,7 @@ cargo 1.85.0 (d73d2caf9 2024-12-31)
 
 To download all the necessary libraries and build the project
 
-```rust
+```bash
 cargo build
 ```
 
@@ -22,7 +22,7 @@ Since we are using `Bevy`, additional
 installations may be needed such as build tools.
 Please refer to the website
 [https://bevy.org/learn/quick-start/getting-started/setup/](https://bevy.org/learn/quick-start/getting-started/setup/)
-for further installation instructions, in case you are facing GPU issues.  
+for further installation instructions in case you are facing GPU issues.  
 
 To run the tests run the command
 
