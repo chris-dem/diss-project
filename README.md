@@ -13,11 +13,11 @@ cargo --version: cargo 1.85.0 (d73d2caf9 2024-12-31)
 rustc --version: rustc 1.85.0 (4d91de4e4 2025-02-17)
 ```
 
-All the workshops
-come with the their own `Cargo.toml` files
-as well as the `Cargo.lock` configuration for the versioning we used.
-We warn that the target library may require `26GB` to install all the necessary dependencies.
-To download all the necessary libraries and build the project.
+All the workspaces
+come with their own `Cargo.toml` files
+as well as the `Cargo.lock` configuration for the versioning of all the libraries.
+Total size of dependencies could add up to `26GB`.
+To download all the necessary libraries and build the project run the command:
 
 ```bash
 cargo build
@@ -70,13 +70,15 @@ The `PureCircuitGraph` data structure. Contains a directed
 graph datastructue that contains two types of nodes:
 `Value` nodes and `Gate` nodes. Node is equipped
 with its value as well as additional information. Moreover,
-gate nodes are attached with status nodes that indicate
+gate nodes are attached with status fields that indicate
 whether they are `Valid`, `InvalidArity` or `InvalidValue`.
 We implement the following core operations:
 
 * `Add` or `Remove` node/edge
 * `Update` the gate status
 * Get node neighbours
+
+
 We expand more on its API on files `pure-circuit-lib::graph`
 
 #### Solution Finders/Enumerator
@@ -90,8 +92,8 @@ We expand more on its API on files `pure-circuit-lib::graph`
 
 ### `main-app` library
 
-Main UI implementation. Library used `Bevy`.
-We refer to the bevy documentation for more information how it works.
+Main UI implementation.
+We refer to the bevy documentation for further information at to how `Bevy` works.
 List of important files:
 
 * `ui_plugin`: File for the setup and rendering of the `UI` window
@@ -102,7 +104,7 @@ List of important files:
 * `state_management`
   * `mouse_state`: Contains the states for mouse management such as `node/edge` modes. Moreover, addition of current mouse position resource
   * `state_init`: Responsible for initialising all essential resources and states of the application.
-  * `edge_management`: Responsible initialising the states and handling the edge addition/removal operations.
+  * `edge_management`: Responsible initialising the edge management states and resources as well as handling edge addition/removal operations.
   * `events`: Initialisation of all events of the application. Set of events that we use:
     * `NodeUpdate`: Re-render the current node and notify the status of all localised gates
     * `NodeStatusUpdate`: Update the status of the gate by re-rendering or removing error circles
@@ -117,4 +119,4 @@ List of important files:
 
 ## Test outputs
 
-We provide a full exert of our test results in `test-output.log`
+We provide a full excerpt of our test results in `test-output.log`
