@@ -4,30 +4,41 @@ Visualisation tool for the __PureCircuit__ problem.
 The tool was built using `Rust` with `Bevy`
 as the UI library.
 
-## Running instruction
+## Running instructions
 
 Rust version used to compile
 
 ```bash
-cargo 1.85.0 (d73d2caf9 2024-12-31)
+cargo --version: cargo 1.85.0 (d73d2caf9 2024-12-31)
+rustc --version: rustc 1.85.0 (4d91de4e4 2025-02-17)
 ```
 
-To download all the necessary libraries and build the project
+All the workshops
+come with the their own `Cargo.toml` files
+as well as the `Cargo.lock` configuration for the versioning we used.
+We warn that the target library may require `26GB` to install all the necessary dependencies.
+To download all the necessary libraries and build the project.
 
 ```bash
 cargo build
 ```
 
-Since we are using `Bevy`, additional
-installations may be needed such as build tools.
-Please refer to the website
-[https://bevy.org/learn/quick-start/getting-started/setup/](https://bevy.org/learn/quick-start/getting-started/setup/)
-for further installation instructions in case you are facing GPU issues.  
+Since we are using `Bevy`, additional requirements:
+
+1. Installed GPU with its drivers in place and configured.
+2. Build tools: Please refer to the website [https://bevy.org/learn/quick-start/getting-started/setup/](https://bevy.org/learn/quick-start/getting-started/setup/) for further installation instructions or in case of any further issues
+   1. For Linux please consult the following website: [For Linux installation instructions](https://github.com/bevyengine/bevy/blob/latest/docs/linux_dependencies.md)
 
 To run the tests run the command
 
 ```bash
 cargo test
+```
+
+To clean any auxiliary files
+
+```bash
+cargo clean
 ```
 
 To run on release mode
